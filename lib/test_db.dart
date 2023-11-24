@@ -48,6 +48,11 @@ final List<Room> rooms = [
   Room(id: 3, name: '103'),
   Room(id: 4, name: '104'),
   Room(id: 5, name: '105'),
+  Room(id: 6, name: '106'),
+  Room(id: 7, name: '107'),
+  Room(id: 8, name: '108'),
+  Room(id: 9, name: '109'),
+  Room(id: 10, name: '110'),
 ];
 
 final List<Guest> guests = [

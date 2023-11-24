@@ -25,41 +25,143 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
   }
 }
 
-class ArrivalsDeparturesTable extends StatelessWidget {
+class ArrivalsDeparturesTable extends StatefulWidget {
+  @override
+  _ArrivalsDeparturesTableState createState() => _ArrivalsDeparturesTableState();
+}
+
+class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
+  late DateTime currentWeekStart;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize current week start date
+    currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Forward/Backward buttons (to be implemented)
-        // Placeholder table
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount: rooms.length,
-          itemBuilder: (BuildContext context, int index) {
-            Room room = rooms[index];
-
-            return Container(
-              color: getCellColor(room.id, DateTime.now()),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: Center(child: Text(room.name)),
-                  ),
-                  for (int i = 0; i < 7; i++)
-                    Container(
-                      padding: EdgeInsets.all(8.0),
-                      color: getCellColor(room.id, DateTime.now().add(Duration(days: i))),
-                      child: Center(child: Text(getReservationInfo(room.id, DateTime.now().add(Duration(days: i))))),
-                    ),
-                ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Column(
+        children: [
+          // Forward/Backward buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    currentWeekStart = currentWeekStart.subtract(Duration(days: 7));
+                  });
+                },
               ),
-            );
-          },
-        ),
-      ],
+              Text('Week of ${formatDate(currentWeekStart)}'),
+              IconButton(
+                icon: Icon(Icons.arrow_forward),
+                onPressed: () {
+                  setState(() {
+                    currentWeekStart = currentWeekStart.add(Duration(days: 7));
+                  });
+                },
+              ),
+            ],
+          ),
+          // Header row with dates
+          Container(
+            color: Colors.grey[300],
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(child: Text('Room')),
+                      ),
+                    ),
+                    for (int i = 0; i < 7; i++)
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day
+                              ? Colors.grey[600] // Darker grey for today's date
+                              : Colors.grey[300],
+                          child: Center(child: Text(formatDate(currentWeekStart.add(Duration(days: i))))),
+                        ),
+                      ),
+                  ],
+                ),
+                // Thin row under the date with day names
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(child: Text('Day')),
+                      ),
+                    ),
+                    for (int i = 0; i < 7; i++)
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          color: Colors.grey[300],
+                          child: Center(child: Text(formatDayName(currentWeekStart.add(Duration(days: i))))),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Scrollable table
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(), // Disable ListView scrolling
+            itemCount: rooms.length,
+            itemBuilder: (BuildContext context, int index) {
+              Room room = rooms[index];
+
+              return Container(
+                color: getCellColor(room.id, currentWeekStart),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(child: Text(room.name)),
+                      ),
+                    ),
+                    for (int i = 0; i < 7; i++)
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          color: getCellColor(room.id, currentWeekStart.add(Duration(days: i))),
+                          child: Center(child: Text(getReservationInfo(room.id, currentWeekStart.add(Duration(days: i))))),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
+
+
+  String formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year % 100}';
+  }
+
+  String formatDayName(DateTime date) {
+    List<String> daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return daysOfWeek[date.weekday - 1];
+  }
+
 
   Color? getCellColor(int roomId, DateTime date) {
     DateTime yesterday = date.subtract(Duration(days: 1));
