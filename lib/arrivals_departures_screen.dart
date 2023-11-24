@@ -67,8 +67,18 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                   });
                 },
               ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+                  });
+                },
+                child: Text('TODAY'),
+              ),
             ],
           ),
+
+
           // Header row with dates
           Container(
             color: Colors.grey[300],
@@ -79,6 +89,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
+                        color: Colors.grey[500],
                         child: Center(child: Text('Room')),
                       ),
                     ),
@@ -86,8 +97,9 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       Expanded(
                         child: Container(
                           padding: EdgeInsets.all(8.0),
-                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day
-                              ? Colors.grey[600] // Darker grey for today's date
+                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
+                              currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
+                              ? Colors.grey[500] // Darker grey for today's date
                               : Colors.grey[300],
                           child: Center(child: Text(formatDate(currentWeekStart.add(Duration(days: i))))),
                         ),
@@ -100,6 +112,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
+                        color: Colors.grey[500],
                         child: Center(child: Text('Day')),
                       ),
                     ),
@@ -107,7 +120,10 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       Expanded(
                         child: Container(
                           padding: EdgeInsets.all(8.0),
-                          color: Colors.grey[300],
+                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
+                              currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
+                              ? Colors.grey[500] // Darker grey for today's date
+                              : Colors.grey[300],
                           child: Center(child: Text(formatDayName(currentWeekStart.add(Duration(days: i))))),
                         ),
                       ),
@@ -116,6 +132,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
               ],
             ),
           ),
+
           // Scrollable table
           ListView.builder(
             shrinkWrap: true,
@@ -131,6 +148,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
+                        color: Colors.grey[500],
                         child: Center(child: Text(room.name)),
                       ),
                     ),
@@ -181,10 +199,10 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
 
     if (todayReservations.isNotEmpty) {
-      // Check for changes in reservations (check-in, check-out, stay or change of guest)
+      // Check for changes in reservations (check-in, check-out, stay, or change of guest)
       if (yesterdayReservations.isEmpty) {
         return Colors.lightGreenAccent; // Guest is arriving today, use light green
-      } else if (todayReservations[0].id != yesterdayReservations[0].id) {
+      } else if (tomorrowReservations.isNotEmpty && todayReservations[0].id != tomorrowReservations[0].id) {
         return Colors.greenAccent; // Guest is changing today, use green
       } else if (tomorrowReservations.isEmpty) {
         return Colors.lightGreenAccent; // Guest is leaving today, use light green
