@@ -8,8 +8,29 @@ enum UserGroup {
   Bar
 }
 
+class CustomAppBar extends StatelessWidget {
+  final UserGroup userGroup;
 
-List<Widget> getDrawerItems(UserGroup userGroup) {
+  CustomAppBar({required this.userGroup});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text('Hotel PMS'),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            // Open the drawer
+            Scaffold.of(context).openDrawer();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   List<Widget> drawerItems = [
     DrawerHeader(
       child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 25)),
@@ -19,7 +40,8 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
     ),
   ];
 
-  // Common menu item for all users
+  /////////////////////// Common menu items Top /////////////////////////////////////////////
+  // Home menu item
   drawerItems.add(
     ListTile(
       leading: Icon(Icons.home),
@@ -30,7 +52,20 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
     ),
   );
 
-  if (userGroup == UserGroup.Bar || userGroup == UserGroup.Admin){
+  // Notifications menu item
+  drawerItems.add(
+    ListTile(
+      leading: Icon(Icons.notifications),
+      title: Text('Notifications'),
+      onTap: () {
+        // Navigate to Notifications
+      },
+    ),
+  );
+
+  /////////////////////// Bar-specific menu items /////////////////////////////////////////////
+
+  if (userGroup == UserGroup.Bar || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager){
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.emoji_food_beverage),
@@ -52,6 +87,8 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
     );
   }
 
+  /////////////////////// Cleaning-specific menu items /////////////////////////////////////////////
+
   if (userGroup == UserGroup.Cleaning || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager) {
     drawerItems.add(
       ListTile(
@@ -64,23 +101,103 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
     );
   }
 
+  /////////////////////// Reception-specific menu items /////////////////////////////////////////////
+  if (userGroup == UserGroup.Reception || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager) {
 
-  if (userGroup == UserGroup.Admin) {
-    // Menu items for Staff and Admin
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.calendar_today),
+        title: Text('Arrivals / Departures'),
+        onTap: () {
+          Navigator.pushNamed(context, '/arrivals_departures');
+          // Navigate to Arrivals / Departures
+        },
+      ),
+    );
+
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.arrow_circle_down),
+        title: Text('Check-in'),
+        onTap: () {
+          // Navigate to Check-in
+          Navigator.pop(context);
+        },
+      ),
+    );
+
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.arrow_circle_up),
+        title: Text('Check-out'),
+        onTap: () {
+          // Navigate to Check-out
+        },
+      ),
+    );
+
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.people),
+        title: Text('Guests'),
+        onTap: () {
+          // Navigate to Guests
+        },
+      ),
+    );
+  }
+
+  //////////////////// Manager-specific menu items ///////////////////////////////////////////
+
+  if (userGroup == UserGroup.Manager || userGroup == UserGroup.Admin) {
+    // Menu items for Manager and Admin
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.meeting_room),
-        title: Text('Room Management'),
+        title: Text('Cleaning Schedule Management'),
         onTap: () {
-          // Navigate to Room Management
+          // Navigate to Cleaning Schedule Management
+        },
+      ),
+    );
+
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.notification_add),
+        title: Text('Notification Management'),
+        onTap: () {
+          // Navigate to Notification Management
+        },
+      ),
+    );
+
+    drawerItems.add(
+      ListTile(
+        leading: Icon(Icons.people),
+        title: Text('User Management'),
+        onTap: () {
+          // Navigate to User Management
         },
       ),
     );
     // Add more menu items as needed
   }
 
+  /////////////////// Admin-specific menu items /////////////////////////////////////////////
+
   if (userGroup == UserGroup.Admin) {
-    // Admin-specific menu items
+    // Menu items for Admin
+
+
+
+
+    // Add more menu items as needed
+  }
+
+
+
+    ////////////////// Common menu items Bottom /////////////////////////////////////////////
+
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.settings),
@@ -90,10 +207,7 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
         },
       ),
     );
-  }
 
-  if (userGroup == UserGroup.Admin) {
-    // Admin-specific menu items
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.account_box),
@@ -103,7 +217,19 @@ List<Widget> getDrawerItems(UserGroup userGroup) {
         },
       ),
     );
-  }
+
+  drawerItems.add(
+    ListTile(
+      leading: Icon(Icons.logout),
+      title: Text('Logout'),
+      onTap: () {
+        // Navigate to Logout
+      },
+    ),
+  );
+
+
+
 
   return drawerItems;
 }

@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'drawer_menu.dart';
+import 'arrivals_departures_screen.dart';
 
-UserGroup currentUserGroup = UserGroup.Admin; //Debug Role
+UserGroup userGroup = UserGroup.Admin; //Debug Role
 
 void main() {
   runApp(MyApp());
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(),
+      routes: {
+        '/arrivals_departures': (context) => ArrivalsDeparturesScreen(), //Add route for Arrivals/Departures
+      },
     );
   }
 }
@@ -37,7 +41,7 @@ class MyHomePage extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            ...getDrawerItems(currentUserGroup), //Generate items for User
+            ...getDrawerItems(userGroup, context), //Generate items for User
           ],
         ),
       ),
