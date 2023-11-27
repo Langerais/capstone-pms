@@ -2,6 +2,8 @@ import 'package:capstone_pms/drawer_menu.dart';
 import 'package:capstone_pms/main.dart';
 import 'package:flutter/material.dart';
 import 'test_db.dart';
+import 'db_helper.dart';
+
 
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
@@ -137,12 +139,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(), // Disable ListView scrolling
-            itemCount: rooms.length,
+            itemCount: DBHelper.getRooms().length,
             itemBuilder: (BuildContext context, int index) {
-              Room room = rooms[index];
+              Room room = DBHelper.getRooms()[index];
 
               return Container(
-                color: getCellColor(room.id, currentWeekStart),
+                //color: getCellColor(room.id, currentWeekStart),
                 child: Row(
                   children: [
                     Expanded(
@@ -185,15 +187,15 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     DateTime yesterday = date.subtract(Duration(days: 1));
     DateTime tomorrow = date.add(Duration(days: 1));
 
-    List<Reservation> yesterdayReservations = reservations
+    List<Reservation> yesterdayReservations = DBHelper.getReservations()
         .where((res) => res.roomId == roomId && yesterday.isAfter(res.startDate) && yesterday.isBefore(res.endDate))
         .toList();
 
-    List<Reservation> todayReservations = reservations
+    List<Reservation> todayReservations = DBHelper.getReservations()
         .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
         .toList();
 
-    List<Reservation> tomorrowReservations = reservations
+    List<Reservation> tomorrowReservations = DBHelper.getReservations()
         .where((res) => res.roomId == roomId && tomorrow.isAfter(res.startDate) && tomorrow.isBefore(res.endDate))
         .toList();
 
@@ -216,12 +218,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   String getGuestFullName(int guestId) {
-    Guest guest = guests.firstWhere((g) => g.id == guestId);
+    Guest guest = DBHelper.getGuests().firstWhere((g) => g.id == guestId);
     return guest.lastName;
   }
 
   String getReservationInfo(int roomId, DateTime date) {
-    List<Reservation> roomReservations = reservations
+    List<Reservation> roomReservations = DBHelper.getReservations()
         .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
         .toList();
 
@@ -249,7 +251,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   String getLeavingGuest(int roomId, DateTime date) {
-    List<Reservation> leavingReservations = reservations
+    List<Reservation> leavingReservations = DBHelper.getReservations()
         .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
         .toList();
 
@@ -257,7 +259,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       Reservation leavingReservation = leavingReservations[0];
       DateTime nextDay = date.add(Duration(days: 1));
 
-      List<Reservation> nextDayReservations = reservations
+      List<Reservation> nextDayReservations = DBHelper.getReservations()
           .where((res) => res.roomId == roomId && nextDay.isAfter(res.startDate) && nextDay.isBefore(res.endDate))
           .toList();
 
