@@ -33,6 +33,24 @@ class ReservationService {
               .surname}');
     }
   }
+
+
+  static Future<List<Reservation>> getReservationsByDateRange(DateTime startDate, DateTime endDate) async {
+    var url = Uri.parse('http://16.16.140.209:5000/reservations/get_reservations_by_date_range')
+        .replace(queryParameters: {
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+    });
+
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Reservation.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load reservations');
+    }
+  }
 }
 
 class GuestService {

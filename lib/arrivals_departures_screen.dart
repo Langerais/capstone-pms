@@ -49,20 +49,18 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   void fetchData() async {
     setState(() => isLoading = true);
     try {
-      reservations = await ReservationService.getReservations();
+      // Fetch reservations for the current week + 1 week before and after
+      DateTime previousWeekStart = currentWeekStart.subtract(Duration(days: 7));
+      DateTime nextWeekEnd = currentWeekStart.add(Duration(days: 14));
+      reservations = await ReservationService.getReservationsByDateRange(previousWeekStart, nextWeekEnd);
       print("Reservations fetched");
-      //print(reservations);
+
       rooms = await RoomService.getRooms();
       print("Rooms fetched");
-      for(Room r in rooms){
-        print(r.id.toString() + " " + r.channelManagerId.toString() + " " + r.name + "\n");
-      }
 
       guests = await GuestService.getGuests();
       print("Guests fetched");
-      for(Guest g in guests){
-        print(g.id.toString() + " " + g.name + " " + g.surname + "\n");
-      }
+
     } catch (e) {
       print("Error fetching data: $e");
     } finally {
