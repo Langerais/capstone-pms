@@ -40,14 +40,28 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     ),
   ];
 
+  // Helper function to create a ListTile wrapped in an InkWell
+  Widget createDrawerItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+      ),
+      splashColor: Colors.blueAccent, // Color for the ripple effect
+    );
+  }
+
   /////////////////////// Common menu items Top /////////////////////////////////////////////
   // Home menu item
   drawerItems.add(
-    ListTile(
-      leading: Icon(Icons.home),
-      title: Text('Home / TBD'),
+    createDrawerItem(   //TODO: Splash color to all menu items ???
+      icon: Icons.home,
+      title: 'Home / TBD',
       onTap: () {
         // Navigate to Home
+        //Navigator.pop(context); // Close the drawer
+        // Add navigation logic here, e.g., Navigator.push(...)
       },
     ),
   );
@@ -108,6 +122,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
       ListTile(
         leading: Icon(Icons.calendar_today),
         title: Text('Arrivals / Departures'),
+        tileColor: Colors.blue[100],
         onTap: () {
           Navigator.pushNamed(context, '/arrivals_departures');
           // Navigate to Arrivals / Departures
@@ -139,6 +154,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.people),
+        tileColor: Colors.blue[100],
         title: Text('Guests'),
         onTap: () {
           Navigator.pushNamed(context, '/guests_list'); // Navigate to GuestsListView
