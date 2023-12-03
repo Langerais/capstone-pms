@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
-
+import 'drawer_menu.dart';
+import 'main.dart';
 
 class MenuView extends StatefulWidget {
+
+  //final UserGroup userGroup;  // Assuming you have a UserGroup class
+
+  //MenuView({required this.userGroup});
+
   @override
   _MenuViewState createState() => _MenuViewState();
 }
@@ -21,7 +27,15 @@ class _MenuViewState extends State<MenuView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Menu Categories'),
+        title: Text('Arrivals/Departures'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            ...getDrawerItems(userGroup, context), //Generate items for User
+          ],
+        ),
       ),
       body: FutureBuilder<List<MenuCategory>>(
         future: _categories,

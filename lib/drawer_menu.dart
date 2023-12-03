@@ -30,6 +30,9 @@ class CustomAppBar extends StatelessWidget {
   }
 }
 
+@override
+Size get preferredSize => Size.fromHeight(kToolbarHeight);  // Required for PreferredSizeWidget
+
 List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   List<Widget> drawerItems = [
     DrawerHeader(
