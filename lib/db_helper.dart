@@ -5,10 +5,11 @@ import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
 
 // TODO: Save URL in a config file
+const BASE_URL = 'http://16.16.140.209:5000';
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
-    var url = Uri.parse('http://16.16.140.209:5000/reservations/get_reservations');
+    var url = Uri.parse('$BASE_URL/reservations/get_reservations');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -21,7 +22,7 @@ class ReservationService {
 
   static Future<List<Reservation>> getReservationsForGuest(Guest guest) async {
     var url = Uri.parse(
-        'http://16.16.140.209:5000/reservations/get_guest_reservations/${guest
+        '$BASE_URL/reservations/get_guest_reservations/${guest
             .id}');
     var response = await http.get(url);
 
@@ -37,7 +38,7 @@ class ReservationService {
 
 
   static Future<List<Reservation>> getReservationsByDateRange(DateTime startDate, DateTime endDate) async {
-    var url = Uri.parse('http://16.16.140.209:5000/reservations/get_reservations_by_date_range')
+    var url = Uri.parse('$BASE_URL/reservations/get_reservations_by_date_range')
         .replace(queryParameters: {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
@@ -56,7 +57,7 @@ class ReservationService {
 
 class GuestService {
   static Future<List<Guest>> getGuests() async {
-    var url = Uri.parse('http://16.16.140.209:5000/guests/get_guests');
+    var url = Uri.parse('$BASE_URL/guests/get_guests');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -81,7 +82,7 @@ class GuestService {
 
 class RoomService {
   static Future<List<Room>> getRooms() async {
-    var url = Uri.parse('http://16.16.140.209:5000/rooms/get_rooms');
+    var url = Uri.parse('$BASE_URL/rooms/get_rooms');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -117,6 +118,78 @@ DateTime? parseDate(String dateString) {
     return null;
   }
 }
+
+class MenuCategoryService {
+  static Future<List<MenuCategory>> getMenuCategories() async {
+    var url = Uri.parse('$BASE_URL/menu/get_categories');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => MenuCategory.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load menu categories');
+    }
+  }
+}
+
+class MenuService {
+  static Future<List<MenuCategory>> getMenuCategories() async {
+    var url = Uri.parse('$BASE_URL/menu/get_categories');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => MenuCategory.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load categories');
+    }
+  }
+
+  static Future<List<MenuItem>> getMenuItemsByCategory(int categoryId) async {
+    var url = Uri.parse('$BASE_URL/menu/get_items_by_category/$categoryId');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => MenuItem.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load items for category $categoryId');
+    }
+  }
+}
+
+
+class BalanceService {
+  static Future<void> addPayment(int reservationId, String paymentMethod, double amount) async {
+    var url = Uri.parse('$BASE_URL/menu/add_payment');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'reservation_id': reservationId,
+        'payment_method': paymentMethod,
+        'payment_amount': amount,
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add payment');
+    }
+  }
+
+  static Future<List<BalanceEntry>> getBalanceEntriesForReservation(int reservationId) async {
+    var url = Uri.parse('$BASE_URL/menu/get_balance_entries/$reservationId');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => BalanceEntry.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load balance entries for reservation $reservationId');
+    }
+  }
+
+}
+
+
+
 
 
 

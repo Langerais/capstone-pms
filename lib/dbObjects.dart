@@ -122,3 +122,66 @@ class Guest {
   }
 
 }
+
+
+class MenuCategory {
+  final int id;
+  final String name;
+
+  MenuCategory({required this.id, required this.name});
+
+  factory MenuCategory.fromJson(Map<String, dynamic> json) {
+    return MenuCategory(
+      id: json['id'] as int,
+      name: json['name'] as String,
+    );
+  }
+}
+
+class MenuItem {
+  final int id;
+  final String name;
+  final String description;
+  final double price;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+  });
+
+  factory MenuItem.fromJson(Map<String, dynamic> json) {
+    return MenuItem(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      price: json['price'] != null ? double.parse(json['price']) : 0.0,
+
+    );
+  }
+
+}
+
+class BalanceEntry {
+  final int id;
+  final int reservationId;
+  final int menuItemId;
+  final double amount;
+
+  BalanceEntry({
+    required this.id,
+    required this.reservationId,
+    required this.menuItemId,
+    required this.amount,
+  });
+
+  factory BalanceEntry.fromJson(Map<String, dynamic> json) {
+    return BalanceEntry(
+      id: json['id'] as int,
+      reservationId: json['reservation_id'] as int,
+      menuItemId: json['menu_item_id'] as int,
+      amount: json['amount'] as double,
+    );
+  }
+}

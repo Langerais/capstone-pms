@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'drawer_menu.dart';
 import 'arrivals_departures_screen.dart';
 import 'guests_list.dart';
+import 'menu_view.dart';
 
 UserGroup userGroup = UserGroup.Admin; //Debug Role
 
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/arrivals_departures': (context) => ArrivalsDeparturesScreen(), //Add route for Arrivals/Departures
         '/guests_list': (context) => GuestsListView(), // Guests list view route
+        '/menu_view': (context) => MenuView(), // Menu view route
       },
     );
   }

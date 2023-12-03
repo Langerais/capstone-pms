@@ -85,7 +85,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
         leading: Icon(Icons.emoji_food_beverage),
         title: Text('Menu / TBD'),
         onTap: () {
-          // Navigate to Room Management
+          Navigator.pushNamed(context, '/menu_view'); // Navigate to Menu
         },
       ),
     );
