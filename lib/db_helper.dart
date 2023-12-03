@@ -17,6 +17,22 @@ class ReservationService {
       throw Exception('Failed to load reservations');
     }
   }
+
+  static Future<List<Reservation>> getReservationsForGuest(Guest guest) async {
+    var url = Uri.parse(
+        'http://16.16.140.209:5000/reservations/get_guest_reservations/${guest
+            .id}');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Reservation.fromJson(json)).toList();
+    } else {
+      throw Exception(
+          'Failed to load reservations for guest ${guest.name} ${guest
+              .surname}');
+    }
+  }
 }
 
 class GuestService {
@@ -41,6 +57,7 @@ class GuestService {
           guest.phone.toLowerCase().contains(searchText.toLowerCase());
     }).toList();
   }
+
 }
 
 class RoomService {

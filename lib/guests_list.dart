@@ -83,16 +83,16 @@ class _GuestsListViewState extends State<GuestsListView> {
   }
 }
 
-class GuestReservationsView extends StatelessWidget {
+class GuestReservationsView extends StatelessWidget {   // TODO: Fetch only Guest's reservations (Add fetchReservationsForGuest method)
   final Guest guest;
 
   GuestReservationsView({required this.guest});
 
   Future<List<Reservation>> fetchReservationsForGuest(Guest guest) async {
     try {
-      var allReservations = await ReservationService.getReservations();
+      var guestReservations = await ReservationService.getReservationsForGuest(guest);
       // Filter reservations for the selected guest
-      return allReservations.where((res) => res.guestId == guest.id).toList();
+      return guestReservations.toList();
     } catch (e) {
       // Handle exceptions
       print('Failed to fetch reservations: $e');
