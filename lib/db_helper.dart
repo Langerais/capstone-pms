@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
 
+// TODO: Save URL in a config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
