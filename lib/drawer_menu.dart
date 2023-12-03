@@ -45,7 +45,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     ListTile(
       leading: Icon(Icons.home),
-      title: Text('Home'),
+      title: Text('Home / TBD'),
       onTap: () {
         // Navigate to Home
       },
@@ -56,7 +56,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     ListTile(
       leading: Icon(Icons.notifications),
-      title: Text('Notifications'),
+      title: Text('Notifications / TBD'),
       onTap: () {
         // Navigate to Notifications
       },
@@ -69,7 +69,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.emoji_food_beverage),
-        title: Text('Menu'),
+        title: Text('Menu / TBD'),
         onTap: () {
           // Navigate to Room Management
         },
@@ -79,7 +79,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.monetization_on),
-        title: Text('Bar Bill'),
+        title: Text('Bar Bill / TBD'),
         onTap: () {
           // Navigate to Room Management
         },
@@ -93,7 +93,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.calendar_month),
-        title: Text('Cleaning Schedule'),
+        title: Text('Cleaning Schedule / TBD'),
         onTap: () {
           // Navigate to Cleaning Schedule
         },
@@ -118,7 +118,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.arrow_circle_down),
-        title: Text('Check-in'),
+        title: Text('Check-in / TBD'),
         onTap: () {
           // Navigate to Check-in
           Navigator.pop(context);
@@ -129,7 +129,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.arrow_circle_up),
-        title: Text('Check-out'),
+        title: Text('Check-out  / TBD'),
         onTap: () {
           // Navigate to Check-out
         },
@@ -154,7 +154,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.meeting_room),
-        title: Text('Cleaning Schedule Management'),
+        title: Text('Cleaning Schedule Management / TBD'),
         onTap: () {
           // Navigate to Cleaning Schedule Management
         },
@@ -164,7 +164,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.notification_add),
-        title: Text('Notification Management'),
+        title: Text('Notification Management / TBD'),
         onTap: () {
           // Navigate to Notification Management
         },
@@ -174,7 +174,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.people),
-        title: Text('User Management'),
+        title: Text('User Management / TBD'),
         onTap: () {
           // Navigate to User Management
         },
@@ -201,7 +201,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.settings),
-        title: Text('Settings'),
+        title: Text('Settings / TBD'),
         onTap: () {
           // Navigate to Settings
         },
@@ -211,7 +211,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.account_box),
-        title: Text('Profile'),
+        title: Text('Profile / TBD'),
         onTap: () {
           // Navigate to Account
         },
@@ -221,7 +221,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     ListTile(
       leading: Icon(Icons.logout),
-      title: Text('Logout'),
+      title: Text('Logout / TBD'),
       onTap: () {
         // Navigate to Logout
       },
