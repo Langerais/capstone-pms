@@ -84,9 +84,9 @@ class CategoryItemsView extends StatelessWidget {
                 MenuItem item = snapshot.data![index];
                 return ListTile(
                   title: Text(item.name),
-                  subtitle: Text('${item.description}\nPrice: €${item.price}'), // TODO: Currency selection ???
+                  subtitle: Text('${item.description}\nPrice: €${item.price}'),
                   onTap: () {
-                    // TODO: Implement item onTap functionality
+                    _showActiveReservations(context, item);
                   },
                 );
               },
@@ -96,4 +96,57 @@ class CategoryItemsView extends StatelessWidget {
       ),
     );
   }
+
+  void _showActiveReservations(BuildContext context, MenuItem item) async {
+    try {
+      DateTime today = DateTime.now();
+      List<Reservation> activeReservations = await ReservationService.getReservationsByDateRange(today, today);
+      List<Guest> guests = await GuestService.getGuests();
+      List<Room> rooms = await RoomService.getRooms();
+      _showReservationsDialog(context, item, activeReservations, guests, rooms);
+    } catch (e) {
+      // Handle errors or show a message if there is an issue fetching data
+      print('Error fetching data: $e');
+    }
+  }
+
+  void _showReservationsDialog(BuildContext context, MenuItem item, List<Reservation> reservations, List<Guest> guests, List<Room> rooms) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Reservation for ${item.name}'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: reservations.map((reservation) {
+                Room room = rooms.firstWhere((r) => r.id == reservation.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'Unknown'));
+                Guest guest = guests.firstWhere((g) => g.id == reservation.guestId, orElse: () => Guest(id: 0, channelManagerId: 'Unknown', name: 'Unknown', surname: 'Guest', phone: 'Unknown', email: 'Unknown'));
+                return ListTile(
+                  title: Text('Room ${room.name}'),
+                  subtitle: Text(guest.surname),
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                    // Implement your logic for when a reservation is tapped
+                    // TODO: Implement _confirmOrder method
+                    // Example: _confirmOrder(context, reservation, item);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Include _confirmOrder method and other methods as necessary
+
 }
