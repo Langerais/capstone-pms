@@ -1,10 +1,11 @@
 import 'package:capstone_pms/drawer_menu.dart';
 import 'package:capstone_pms/main.dart';
 import 'package:flutter/material.dart';
-import 'test_db.dart';
+import 'dbObjects.dart';
 import 'db_helper.dart';
-
-
+import 'test_db.dart';
+import 'db_helper.dart' as DBHelper;
+import 'package:collection/collection.dart';
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
   @override
@@ -22,7 +23,6 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
         ),
       ),
       body: ArrivalsDeparturesTable(),
-
     );
   }
 }
@@ -34,16 +34,49 @@ class ArrivalsDeparturesTable extends StatefulWidget {
 
 class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   late DateTime currentWeekStart;
+  List<Reservation> reservations = [];
+  List<Room> rooms = [];
+  List<Guest> guests = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Initialize current week start date
     currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+    fetchData();
+  }
+
+  void fetchData() async {
+    setState(() => isLoading = true);
+    try {
+      reservations = await ReservationService.getReservations();
+      print("Reservations fetched");
+      //print(reservations);
+      rooms = await RoomService.getRooms();
+      print("Rooms fetched");
+      for(Room r in rooms){
+        print(r.id.toString() + " " + r.channelManagerId.toString() + " " + r.name + "\n");
+      }
+
+      guests = await GuestService.getGuests();
+      print("Guests fetched");
+      for(Guest g in guests){
+        print(g.id.toString() + " " + g.name + " " + g.surname + "\n");
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if (isLoading) {
+      //fetchReservations();
+      return Center(child: CircularProgressIndicator());
+    }
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
@@ -57,6 +90,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                 onPressed: () {
                   setState(() {
                     currentWeekStart = currentWeekStart.subtract(Duration(days: 7));
+                    fetchData();
                   });
                 },
               ),
@@ -66,6 +100,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                 onPressed: () {
                   setState(() {
                     currentWeekStart = currentWeekStart.add(Duration(days: 7));
+                    fetchData();
                   });
                 },
               ),
@@ -73,13 +108,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                 onPressed: () {
                   setState(() {
                     currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+                    fetchData();
                   });
                 },
                 child: Text('TODAY'),
               ),
             ],
           ),
-
 
           // Header row with dates
           Container(
@@ -139,12 +174,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(), // Disable ListView scrolling
-            itemCount: DBHelper.getRooms().length,
+            itemCount: rooms.length, // Assuming you have a list of rooms
             itemBuilder: (BuildContext context, int index) {
-              Room room = DBHelper.getRooms()[index];
+              Room room = rooms[index];
 
               return Container(
-                //color: getCellColor(room.id, currentWeekStart),
                 child: Row(
                   children: [
                     Expanded(
@@ -156,11 +190,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     ),
                     for (int i = 0; i < 7; i++)
                       Expanded(
-                        child: Container(
-                          padding: EdgeInsets.all(8.0),
-                          color: getCellColor(room.id, currentWeekStart.add(Duration(days: i))),
-                          child: Center(child: Text(getReservationInfo(room.id, currentWeekStart.add(Duration(days: i))))),
-                        ),
+                        child: buildReservationCell(room.id, currentWeekStart.add(Duration(days: i))),
                       ),
                   ],
                 ),
@@ -172,6 +202,58 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     );
   }
 
+  Widget buildReservationCell(int roomId, DateTime date) {
+    return FutureBuilder<String>(
+      future: getLeavingGuest(roomId, date),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: EdgeInsets.all(8.0),
+            color: getCellColor(roomId, date),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        } else {
+          return GestureDetector(
+            onTap: () => onCellTap(roomId, date),
+            child: Container(
+              padding: EdgeInsets.all(8.0),
+              color: getCellColor(roomId, date),
+              child: Center(child: Text(snapshot.data ?? '')),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  void onCellTap(int roomId, DateTime date) {
+    // Find the reservation for this room and date
+    Reservation? reservation = reservations.firstWhereOrNull(
+          (r) => r.roomId == roomId &&
+          date.isAfter(r.startDate.subtract(const Duration(days: 1))) &&
+          date.isBefore(r.endDate.add(const Duration(days: 1))),
+    );
+
+    if (reservation != null) {
+      // Find the guest details
+      Guest? guest = guests.firstWhereOrNull((g) => g.id == reservation.guestId);
+
+      if (guest != null) {
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return buildReservationDetailsModal(reservation, guest);
+          },
+        );
+      }
+    }
+  }
+
+
+
+  bool isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 
   String formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year % 100}';
@@ -182,96 +264,119 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     return daysOfWeek[date.weekday - 1];
   }
 
-
   Color? getCellColor(int roomId, DateTime date) {
     DateTime yesterday = date.subtract(Duration(days: 1));
     DateTime tomorrow = date.add(Duration(days: 1));
 
-    List<Reservation> yesterdayReservations = DBHelper.getReservations()
-        .where((res) => res.roomId == roomId && yesterday.isAfter(res.startDate) && yesterday.isBefore(res.endDate))
+    List<Reservation> yesterdayReservations = reservations
+        .where((res) => res.roomId == roomId && yesterday.isAfter(res.startDate) && yesterday.isBefore(res.endDate.add(Duration(days: 1))))
         .toList();
 
-    List<Reservation> todayReservations = DBHelper.getReservations()
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
+    List<Reservation> todayReservations = reservations
+        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
         .toList();
 
-    List<Reservation> tomorrowReservations = DBHelper.getReservations()
-        .where((res) => res.roomId == roomId && tomorrow.isAfter(res.startDate) && tomorrow.isBefore(res.endDate))
+    List<Reservation> tomorrowReservations = reservations
+        .where((res) => res.roomId == roomId && tomorrow.isAfter(res.startDate) && tomorrow.isBefore(res.endDate.add(Duration(days: 1))))
         .toList();
-
 
     if (todayReservations.isNotEmpty) {
       // Check for changes in reservations (check-in, check-out, stay, or change of guest)
       if (yesterdayReservations.isEmpty) {
-        return Colors.lightGreenAccent; // Guest is arriving today, use light green
+        return Colors.lightBlueAccent; // Guest is arriving today, use light green
       } else if (tomorrowReservations.isNotEmpty && todayReservations[0].id != tomorrowReservations[0].id) {
-        return Colors.greenAccent; // Guest is changing today, use green
-      } else if (tomorrowReservations.isEmpty) {
-        return Colors.lightGreenAccent; // Guest is leaving today, use light green
-      } else {
-        return Colors.lightGreen[200]; // Guest is staying, use light green
+        return Colors.blueAccent; // Guest is changing today, use green
+      } //else if (tomorrowReservations.isEmpty) {
+        //return Colors.lightGreenAccent; // Guest is leaving today, use light green
+      //}
+    else {
+        return Colors.lightBlue[200]; // Guest is staying, use light green
       }
     }
 
     return Colors.white; // Room available
-
   }
 
-  String getGuestFullName(int guestId) {
-    Guest guest = DBHelper.getGuests().firstWhere((g) => g.id == guestId);
-    return guest.lastName;
+  Future<String> getGuestFullName(int guestId) async {  //TODO: Remove this function ???
+    //List<Guest> guests = await GuestService.getGuests();
+    Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
+    return guest != null ? '${guest.name} ${guest.surname}' : 'Unknown';
   }
 
-  String getReservationInfo(int roomId, DateTime date) {
-    List<Reservation> roomReservations = DBHelper.getReservations()
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
+  Future<String> getGuestSurname(int guestId) async {
+    //List<Guest> guests = await GuestService.getGuests();
+    Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
+    return guest != null ? guest.surname : 'Unknown';
+  }
+
+  Future<String?> getReservationInfo(int roomId, DateTime date) async {
+    List<Reservation> roomReservations = reservations
+        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
         .toList();
+
 
     if (roomReservations.isNotEmpty) {
       Reservation reservation = roomReservations[0];
+      String arrivingGuest = await getGuestSurname(reservation.guestId);
 
       if (reservation.startDate == date) {
         // Guest is arriving today
-        String leavingGuest = getLeavingGuest(roomId, date);
-        String arrivingGuest = getGuestFullName(reservation.guestId);
-
-        if (leavingGuest.isNotEmpty) {
-          return '$leavingGuest / $arrivingGuest';
-        } else {
-          return arrivingGuest;
-        }
+        String leavingGuest = await getLeavingGuest(roomId, date);
+        return leavingGuest.isNotEmpty ? '$leavingGuest / $arrivingGuest' : arrivingGuest;
       } else {
         // Guest is staying or leaving today
-        String leavingGuest = getLeavingGuest(roomId, date);
-        return leavingGuest.isNotEmpty ? leavingGuest : getGuestFullName(reservation.guestId);
+        String leavingGuest = await getLeavingGuest(roomId, date);
+        return leavingGuest.isNotEmpty ? leavingGuest : arrivingGuest;
       }
     } else {
       return 'FREE'; // Room available
     }
   }
 
-  String getLeavingGuest(int roomId, DateTime date) {
-    List<Reservation> leavingReservations = DBHelper.getReservations()
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate))
+
+  Future<String> getLeavingGuest(int roomId, DateTime date) async {
+    List<Reservation> leavingReservations = reservations
+        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
         .toList();
 
     if (leavingReservations.isNotEmpty) {
       Reservation leavingReservation = leavingReservations[0];
       DateTime nextDay = date.add(Duration(days: 1));
 
-      List<Reservation> nextDayReservations = DBHelper.getReservations()
+      List<Reservation> nextDayReservations = reservations
           .where((res) => res.roomId == roomId && nextDay.isAfter(res.startDate) && nextDay.isBefore(res.endDate))
           .toList();
 
       if (nextDayReservations.isNotEmpty && leavingReservation.id != nextDayReservations[0].id) {
         // Different reservation IDs on adjacent days, both guests are involved
-        return '${getGuestFullName(leavingReservation.guestId)} / ${getGuestFullName(nextDayReservations[0].guestId)}';
+        return '${await getGuestSurname(leavingReservation.guestId)} / ${await getGuestSurname(nextDayReservations[0].guestId)}';
       } else {
         // Same reservation ID on adjacent days, returning only the leaving guest
-        return getGuestFullName(leavingReservation.guestId);
+        return await getGuestSurname(leavingReservation.guestId);
       }
     } else {
       return ''; // No leaving guest
     }
   }
+
+  Widget buildReservationDetailsModal(Reservation reservation, Guest guest) {
+    return Container(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text("Reservation Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Guest Name: ${guest.name} ${guest.surname}"),
+          Text("Email: ${guest.email}"),
+          Text("Phone: ${guest.phone}"),
+          Text("Check-in Date: ${formatDate(reservation.startDate)}"),
+          Text("Check-out Date: ${formatDate(reservation.endDate)}"),
+          // Add more details as needed
+        ],
+      ),
+    );
+  }
+
 }

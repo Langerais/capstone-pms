@@ -1,30 +1,76 @@
 import 'package:capstone_pms/main.dart';
 import 'test_db.dart';
+import 'dart:convert';
+import 'dbObjects.dart';
+import 'package:http/http.dart' as http;
 
 
+class ReservationService {
+  static Future<List<Reservation>> getReservations() async {
+    var url = Uri.parse('http://16.16.140.209:5000/reservations/get_reservations');
+    var response = await http.get(url);
 
-class DBHelper {
-  // Method to get rooms
-  static List<Room> getRooms() {
-    // Replace with actual DB query in the future
-    return rooms; // Your hardcoded list
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Reservation.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load reservations');
+    }
   }
+}
 
-  // Method to get guests
-  static List<Guest> getGuests() {
-    // Replace with actual DB query in the future
-    return guests; // Your hardcoded list
+class GuestService {
+  static Future<List<Guest>> getGuests() async {
+    var url = Uri.parse('http://16.16.140.209:5000/guests/get_guests');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Guest.fromJson(json)).toList();
+    } else {
+      print('Failed to load guests. Status code: ${response.statusCode}. Response body: ${response.body}');
+      throw Exception('Failed to load guests');
+    }
   }
+}
 
-  // Method to get reservations
-  static List<Reservation> getReservations() {
-    // Replace with actual DB query in the future
-    return reservations; // Your hardcoded list
+class RoomService {
+  static Future<List<Room>> getRooms() async {
+    var url = Uri.parse('http://16.16.140.209:5000/rooms/get_rooms');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Room.fromJson(json)).toList();
+    } else {
+      print('Failed to load rooms. Status code: ${response.statusCode}. Response body: ${response.body}');
+      throw Exception('Failed to load rooms');
+    }
   }
+}
 
+DateTime? parseDate(String dateString) {
+  try {
+    // Extracting date parts
+    var parts = dateString.split(' ');
+    var day = parts[1];
+    var month = parts[2];
+    var year = parts[3];
+    var timeParts = parts[4].split(':');
+    var hours = timeParts[0];
+    var minutes = timeParts[1];
+    var seconds = timeParts[2];
 
+    // Converting month to a number
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var monthNumber = months.indexOf(month) + 1;
 
-// Add more methods as needed for other CRUD operations
+    // Creating a new DateTime object
+    return DateTime.parse('$year-$monthNumber-$day $hours:$minutes:$seconds');
+  } catch (e) {
+    print("Date parsing error: $e");
+    return null;
+  }
 }
 
 
