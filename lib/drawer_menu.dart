@@ -141,7 +141,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
         leading: Icon(Icons.people),
         title: Text('Guests'),
         onTap: () {
-          // Navigate to Guests
+          Navigator.pushNamed(context, '/guests_list'); // Navigate to GuestsListView
         },
       ),
     );

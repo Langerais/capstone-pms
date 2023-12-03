@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:intl/intl.dart';
 import 'db_helper.dart' as db;
 
@@ -30,6 +32,7 @@ class Reservation {
   final int guestId;
   final DateTime startDate;
   final DateTime endDate;
+  final double dueAmount;
 
   Reservation({
     required this.id,
@@ -38,6 +41,7 @@ class Reservation {
     required this.guestId,
     required this.startDate,
     required this.endDate,
+    required this.dueAmount
   });
 
   factory Reservation.fromJson(Map<String, dynamic> json) {
@@ -49,8 +53,14 @@ class Reservation {
       roomId: json['room_id'] as int,
       guestId: json['guest_id'] as int,
       startDate: DateTime.parse(json['start_date']),
-      endDate: DateTime.parse(json['end_date'])
+      endDate: DateTime.parse(json['end_date']),
+      dueAmount: json['due_amount'] != null ? double.parse(json['due_amount']) : 0.0,
+
     );
+  }
+
+  String get formattedDueAmount {
+    return dueAmount.toStringAsFixed(2);
   }
 }
 

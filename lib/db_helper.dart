@@ -32,6 +32,15 @@ class GuestService {
       throw Exception('Failed to load guests');
     }
   }
+
+  static List<Guest> filterGuests(String searchText, List<Guest> allGuests) {
+    return allGuests.where((guest) {
+      return guest.name.toLowerCase().contains(searchText.toLowerCase()) ||
+          guest.surname.toLowerCase().contains(searchText.toLowerCase()) ||
+          guest.email.toLowerCase().contains(searchText.toLowerCase()) ||
+          guest.phone.toLowerCase().contains(searchText.toLowerCase());
+    }).toList();
+  }
 }
 
 class RoomService {

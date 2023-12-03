@@ -286,11 +286,8 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
         return Colors.lightBlueAccent; // Guest is arriving today, use light green
       } else if (tomorrowReservations.isNotEmpty && todayReservations[0].id != tomorrowReservations[0].id) {
         return Colors.blueAccent; // Guest is changing today, use green
-      } //else if (tomorrowReservations.isEmpty) {
-        //return Colors.lightGreenAccent; // Guest is leaving today, use light green
-      //}
-    else {
-        return Colors.lightBlue[200]; // Guest is staying, use light green
+      } else {
+        return Colors.lightBlue[200]; // Guest is in room, use light green
       }
     }
 
