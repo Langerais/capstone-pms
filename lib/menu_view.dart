@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
 
-import 'package:flutter/material.dart';
-import 'db_helper.dart';  // Replace with your actual path to db_helper.dart
 
 class MenuView extends StatefulWidget {
   @override
@@ -86,7 +84,7 @@ class CategoryItemsView extends StatelessWidget {
                 MenuItem item = snapshot.data![index];
                 return ListTile(
                   title: Text(item.name),
-                  subtitle: Text('${item.description}\nPrice: \€${item.price}'),
+                  subtitle: Text('${item.description}\nPrice: €${item.price}'), // TODO: Currency selection ???
                   onTap: () {
                     // TODO: Implement item onTap functionality
                   },

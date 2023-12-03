@@ -1,6 +1,6 @@
-import 'package:capstone_pms/main.dart';
-import 'test_db.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
 import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
 
@@ -64,7 +64,9 @@ class GuestService {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => Guest.fromJson(json)).toList();
     } else {
-      print('Failed to load guests. Status code: ${response.statusCode}. Response body: ${response.body}');
+      if (kDebugMode) {
+        print('Failed to load guests. Status code: ${response.statusCode}. Response body: ${response.body}');
+      }
       throw Exception('Failed to load guests');
     }
   }
@@ -89,7 +91,9 @@ class RoomService {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => Room.fromJson(json)).toList();
     } else {
-      print('Failed to load rooms. Status code: ${response.statusCode}. Response body: ${response.body}');
+      if (kDebugMode) {
+        print('Failed to load rooms. Status code: ${response.statusCode}. Response body: ${response.body}');
+      }
       throw Exception('Failed to load rooms');
     }
   }
@@ -114,7 +118,9 @@ DateTime? parseDate(String dateString) {
     // Creating a new DateTime object
     return DateTime.parse('$year-$monthNumber-$day $hours:$minutes:$seconds');
   } catch (e) {
-    print("Date parsing error: $e");
+    if (kDebugMode) {
+      print("Date parsing error: $e");
+    }
     return null;
   }
 }

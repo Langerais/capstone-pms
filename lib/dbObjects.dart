@@ -1,7 +1,4 @@
-import 'dart:ffi';
-
-import 'package:intl/intl.dart';
-import 'db_helper.dart' as db;
+import 'package:flutter/foundation.dart';
 
 class Room {
   final int id;
@@ -80,7 +77,9 @@ DateTime? parseCustomDateFormat(String dateString) {
 
     return DateTime.utc(year, month, day, hour, minute, second);
   } catch (e) {
-    print("Error parsing date: $e");
+    if (kDebugMode) {
+      print("Error parsing date: $e");
+    }  // For debugging
     return null;
   }
 }

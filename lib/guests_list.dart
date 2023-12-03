@@ -1,9 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
 
-//import 'guest_reservations_view.dart';
 
 class GuestsListView extends StatefulWidget {
   @override
