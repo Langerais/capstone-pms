@@ -78,12 +78,15 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   if (userGroup == UserGroup.Bar || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager){
     drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.emoji_food_beverage),
-        title: Text('Menu / TBD'),
-        onTap: () {
-          Navigator.pushNamed(context, '/menu_view'); // Navigate to Menu
-        },
+      Container(
+        color: Colors.blue[100], // Change this to your desired color
+        child: ListTile(
+          leading: Icon(Icons.home),
+          title: Text('Restoraurant Menu'),
+          onTap: () {
+            Navigator.pushNamed(context, '/menu_view'); // Navigate to Menu
+          },
+        ),
       ),
     );
 
@@ -130,7 +133,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.arrow_circle_down),
-        title: Text('Check-in / TBD'),
+        title: Text('Check-in / TBD'),  // TODO: Move to Arrivals / Departures
         onTap: () {
           // Navigate to Check-in
           Navigator.pop(context);
@@ -141,7 +144,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.arrow_circle_up),
-        title: Text('Check-out  / TBD'),
+        title: Text('Check-out  / TBD'),  // TODO: Move to Arrivals / Departures
         onTap: () {
           // Navigate to Check-out
         },
