@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
+import 'authentication.dart';
 
-enum UserGroup {
-  Admin,
-  Manager,
-  Reception,
-  Cleaning,
-  Bar
-}
 
 class CustomAppBar extends StatelessWidget {
   final UserGroup userGroup;

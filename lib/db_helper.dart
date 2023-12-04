@@ -160,6 +160,49 @@ class MenuService {
       throw Exception('Failed to load items for category $categoryId');
     }
   }
+
+  static Future<void> addMenuItem(String name, int categoryId, String description, double price) async {
+    var url = Uri.parse('$BASE_URL/menu/create_item');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'name': name,
+        'category_id': categoryId,
+        'description': description,
+        'price': price,
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add menu item');
+    }
+  }
+
+  static Future<void> updateMenuItem(int itemId, String name, int categoryId, String description, double price) async {
+    var url = Uri.parse('$BASE_URL/menu/modify_item/$itemId');
+    var response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'name': name,
+        'category_id': categoryId,
+        'description': description,
+        'price': price,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update menu item');
+    }
+  }
+
+  static Future<void> deleteMenuItem(int itemId) async {
+    var url = Uri.parse('$BASE_URL/menu/remove_item/$itemId');
+    var response = await http.delete(url);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete menu item');
+    }
+  }
+
 }
 
 

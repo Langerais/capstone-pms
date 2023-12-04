@@ -1,3 +1,4 @@
+import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
 import 'package:capstone_pms/main.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            ...getDrawerItems(userGroup, context), //Generate items for User
+            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
           ],
         ),
       ),

@@ -4,8 +4,9 @@ import 'drawer_menu.dart';
 import 'arrivals_departures_screen.dart';
 import 'guests_list.dart';
 import 'menu_view.dart';
+import 'authentication.dart';
 
-UserGroup userGroup = UserGroup.Admin; //Debug Role
+
 
 void main() {
   runApp(MyApp());
@@ -13,7 +14,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,7 +44,7 @@ class MyHomePage extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            ...getDrawerItems(userGroup, context), //Generate items for User
+            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
           ],
         ),
       ),

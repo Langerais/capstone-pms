@@ -139,12 +139,14 @@ class MenuCategory {
 
 class MenuItem {
   final int id;
+  final int categoryId;
   final String name;
   final String description;
   final double price;
 
   MenuItem({
     required this.id,
+    required this.categoryId,
     required this.name,
     required this.description,
     required this.price,
@@ -153,6 +155,7 @@ class MenuItem {
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
       id: json['id'] as int,
+      categoryId: json['category_id'] as int,
       name: json['name'] as String,
       description: json['description'] as String,
       price: json['price'] != null ? double.parse(json['price']) : 0.0,

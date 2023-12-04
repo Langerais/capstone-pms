@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'authentication.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
 import 'drawer_menu.dart';
 import 'main.dart';
 
 class MenuView extends StatefulWidget {
+
+
 
   //final UserGroup userGroup;  // Assuming you have a UserGroup class
 
@@ -21,6 +24,7 @@ class _MenuViewState extends State<MenuView> {
   @override
   void initState() {
     super.initState();
+    UserGroup userGroup = Auth.getUserRole(); //Debug Role TODO : Remove
     _categories = MenuCategoryService.getMenuCategories();
   }
 
@@ -34,7 +38,7 @@ class _MenuViewState extends State<MenuView> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            ...getDrawerItems(userGroup, context), //Generate items for User
+            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
           ],
         ),
       ),
@@ -82,6 +86,22 @@ class CategoryItemsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Menu Items'),
+        actions: <Widget>[
+          if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                _showCreateItemDialog(context, categoryId);
+              },
+            ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (BuildContext context) => EditItemDialog(categoryId: categoryId),
+    ),
+          ),
+        ],
       ),
       body: FutureBuilder<List<MenuItem>>(
         future: MenuService.getMenuItemsByCategory(categoryId),
@@ -173,6 +193,99 @@ class CategoryItemsView extends StatelessWidget {
 
 }
 
+void _showCreateItemDialog(BuildContext context, int categoryId) {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Create New Menu Item'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(hintText: 'Item Name'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(hintText: 'Description'),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: InputDecoration(hintText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Create'),
+            onPressed: () async {
+              String name = nameController.text;
+              String description = descriptionController.text;
+              String priceStr = priceController.text;
+              double? price = double.tryParse(priceStr);
+
+              if (name.isEmpty || description.isEmpty || price == null || price < 0) {
+                // Handle input validation
+                Fluttertoast.showToast(
+                  msg: "Please fill in all fields with valid data.",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+                return;
+              }
+
+              try {
+                await MenuService.addMenuItem(name, categoryId, description, price);
+                Fluttertoast.showToast(
+                  msg: "$name added successfully",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.green,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+                Navigator.of(context).pop(); // Close the create item dialog
+                Navigator.of(context).pop(); // Navigate back to the categories view
+
+              } catch (e) {
+                // Handle errors like network issues or server errors
+                Fluttertoast.showToast(
+                  msg: "Failed to create item: $e",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+
+              }
+            },
+          ),
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+
+
 class _ConfirmOrderDialog extends StatefulWidget {
   final Reservation reservation;
   final MenuItem item;
@@ -258,4 +371,240 @@ class __ConfirmOrderDialogState extends State<_ConfirmOrderDialog> {
       ],
     );
   }
+
 }
+
+class EditItemDialog extends StatefulWidget {
+  final int categoryId;
+
+  EditItemDialog({required this.categoryId});
+
+  @override
+  _EditItemDialogState createState() => _EditItemDialogState();
+}
+
+class _EditItemDialogState extends State<EditItemDialog> {
+  MenuItem? selectedItem;
+  List<MenuItem> items = [];
+  List<MenuCategory> categories = [];
+  bool isLoading = true;
+
+  late TextEditingController nameController;
+  late TextEditingController descriptionController;
+  late TextEditingController priceController;
+  int selectedCategoryId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMenuItems();
+    _loadMenuCategories();
+  }
+
+  void _updateEditingControllers(MenuItem item) {
+    nameController = TextEditingController(text: item.name);
+    descriptionController = TextEditingController(text: item.description);
+    priceController = TextEditingController(text: item.price.toString());
+    selectedCategoryId = item.categoryId;
+  }
+
+  void _loadMenuItems() async {
+    try {
+      items = await MenuService.getMenuItemsByCategory(widget.categoryId);
+      if (items.isNotEmpty) {
+        selectedItem = items.first;
+        _updateEditingControllers(selectedItem!);
+      }
+      setState(() => isLoading = false);
+    } catch (e) {
+      // TODO: Show error message
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _loadMenuCategories() async {
+    try {
+      categories = await MenuCategoryService.getMenuCategories();
+      setState(() {});
+    } catch (e) {
+      // TODO: Show error message
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) return CircularProgressIndicator();
+
+// Inside the build method of _EditItemDialogState
+    return AlertDialog(
+      title: Text('Edit Menu Item'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: DropdownButton<MenuItem>(
+                    value: selectedItem,
+                    onChanged: (MenuItem? newValue) {
+                      setState(() {
+                        selectedItem = newValue!;
+                        _updateEditingControllers(newValue);
+                      });
+                    },
+                    items: items.map<DropdownMenuItem<MenuItem>>((MenuItem item) {
+                      return DropdownMenuItem<MenuItem>(
+                        value: item,
+                        child: Text(item.name),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmDelete(context, selectedItem),
+                ),
+              ],
+            ),
+
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(hintText: 'Item Name'),
+            ),
+            TextField(
+              controller: descriptionController,
+              decoration: InputDecoration(hintText: 'Description'),
+            ),
+            TextField(
+              controller: priceController,
+              decoration: InputDecoration(hintText: 'Price'),
+              keyboardType: TextInputType.number,
+            ),
+            DropdownButton<int>(
+              value: selectedCategoryId,
+              onChanged: (int? newValue) {
+                setState(() {
+                  selectedCategoryId = newValue!;
+                });
+              },
+              items: categories.map<DropdownMenuItem<int>>((MenuCategory category) {
+                return DropdownMenuItem<int>(
+                  value: category.id,
+                  child: Text(category.name),
+                );
+              }).toList(),
+            ),
+            TextButton(
+              child: Text('Save'),
+              onPressed: () async {
+
+
+
+                try {
+
+                  if (nameController.text.isEmpty || priceController.text.isEmpty || double.parse(priceController.text) < 0) {
+                    // Handle input validation
+                    Fluttertoast.showToast(
+                      msg: "Please fill in all fields with valid data.",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
+                    return;
+                  }
+
+                  await MenuService.updateMenuItem(
+                    selectedItem!.id,
+                    nameController.text,
+                    selectedCategoryId,
+                    descriptionController.text,
+                    double.parse(priceController.text),
+                  );
+                  Navigator.of(context).pop(); // Close the edit dialog
+                  Navigator.of(context).pop(); // Close the category items view
+
+                  Fluttertoast.showToast(
+                    msg: "Item '${nameController.text}' updated successfully",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
+                } catch (e) {
+                  // Handle the error (e.g., show an error message)
+                }
+              },
+            ),
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ), // ... Save and Cancel buttons
+          ],
+
+        ),
+
+      ),
+    );
+
+  }
+
+  void _confirmDelete(BuildContext context, MenuItem? item) {
+    if (item == null) return; // Safety check
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete ${item.name}?'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete this item?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () async {
+                try {
+                  await MenuService.deleteMenuItem(item.id);
+                  Navigator.of(context).pop(); // Close the confirmation dialog
+                  Navigator.of(context).pop(); // Close the edit dialog
+                  Navigator.of(context).pop(); // Close the category items view
+
+                  Fluttertoast.showToast(
+                    msg: "Item '${item.name}' deleted successfully",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
+                } catch (e) {
+                  // Handle the error (e.g., show an error message)
+                  Navigator.of(context).pop(); // Close the confirmation dialog
+                }
+              },
+              style: TextButton.styleFrom(primary: Colors.red),
+            ),
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the confirmation dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+}
+
