@@ -167,12 +167,14 @@ class BalanceEntry {
   final int reservationId;
   final int menuItemId;
   final double amount;
+  final int numberOfItems;  // New field
 
   BalanceEntry({
     required this.id,
     required this.reservationId,
     required this.menuItemId,
     required this.amount,
+    required this.numberOfItems,
   });
 
   factory BalanceEntry.fromJson(Map<String, dynamic> json) {
@@ -180,7 +182,9 @@ class BalanceEntry {
       id: json['id'] as int,
       reservationId: json['reservation_id'] as int,
       menuItemId: json['menu_item_id'] as int,
-      amount: json['amount'] as double,
+      amount: json['amount'] != null ? double.parse(json['amount']) : 0.0,
+      numberOfItems: json['number_of_items'] as int? ?? 1,  // Default to 1 if not provided
     );
   }
 }
+

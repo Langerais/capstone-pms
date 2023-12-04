@@ -140,14 +140,13 @@ class MenuCategoryService {
 }
 
 class MenuService {
-  static Future<List<MenuCategory>> getMenuCategories() async {
-    var url = Uri.parse('$BASE_URL/menu/get_categories');
+  static Future<MenuItem> getMenuItem(int itemId) async {
+    var url = Uri.parse('$BASE_URL/menu_management/get_item/$itemId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
-      var jsonData = jsonDecode(response.body) as List;
-      return jsonData.map((json) => MenuCategory.fromJson(json)).toList();
+      return MenuItem.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to load categories');
+      throw Exception('Failed to load menu item');
     }
   }
 
@@ -165,6 +164,43 @@ class MenuService {
 
 
 class BalanceService {
+
+  static Future<BalanceEntry> createBalanceEntry(int reservationId, int menuItemId, double amount) async {
+    var url = Uri.parse('$BASE_URL/menu/create_balance_entry');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'reservation_id': reservationId,
+        'menu_item_id': menuItemId,
+        'amount': amount,
+      }),
+    );
+    if (response.statusCode == 201) {
+      return BalanceEntry.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create balance entry');
+    }
+  }
+
+  static Future<void> addOrder(int reservationId, int menuItemId, int quantity, double pricePerItem) async {
+    var url = Uri.parse('$BASE_URL/menu/create_balance_entry');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'reservation_id': reservationId,
+        'menu_item_id': menuItemId,
+        'amount': (pricePerItem * quantity),  // Calculate total amount
+        'number_of_items': quantity,  // Include quantity as number of items
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add order');
+    }
+  }
+
+
   static Future<void> addPayment(int reservationId, String paymentMethod, double amount) async {
     var url = Uri.parse('$BASE_URL/menu/add_payment');
     var response = await http.post(

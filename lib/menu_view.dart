@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
 import 'drawer_menu.dart';
@@ -20,7 +21,7 @@ class _MenuViewState extends State<MenuView> {
   @override
   void initState() {
     super.initState();
-    _categories = MenuService.getMenuCategories();
+    _categories = MenuCategoryService.getMenuCategories();
   }
 
   @override
@@ -141,8 +142,7 @@ class CategoryItemsView extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).pop(); // Close the dialog
                     // Implement your logic for when a reservation is tapped
-                    // TODO: Implement _confirmOrder method
-                    // Example: _confirmOrder(context, reservation, item);
+                    _confirmOrder(context, reservation, item, room);
                   },
                 );
               }).toList(),
@@ -161,6 +161,101 @@ class CategoryItemsView extends StatelessWidget {
     );
   }
 
-// Include _confirmOrder method and other methods as necessary
+  void _confirmOrder(BuildContext context, Reservation reservation, MenuItem item, Room room) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _ConfirmOrderDialog(reservation: reservation, item: item, room: room);
+      },
+    );
+  }
 
+
+}
+
+class _ConfirmOrderDialog extends StatefulWidget {
+  final Reservation reservation;
+  final MenuItem item;
+  final Room room;
+
+  _ConfirmOrderDialog({
+    required this.reservation,
+    required this.item,
+    required this.room,
+  });
+
+  @override
+  __ConfirmOrderDialogState createState() => __ConfirmOrderDialogState();
+}
+
+class __ConfirmOrderDialogState extends State<_ConfirmOrderDialog> {
+  int itemCount = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Confirm Order'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text('Confirm adding ${widget.item.name} to Room ${widget.room.id} - ${widget.room.name} for €${(widget.item.price * itemCount).toStringAsFixed(2)}?'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.red,
+                  child: IconButton(
+                    icon: Icon(Icons.remove, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        if (itemCount > 1) itemCount--;
+                      });
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text('$itemCount', style: TextStyle(fontSize: 20.0)),
+                ),
+                CircleAvatar(
+                  backgroundColor: Colors.green,
+                  child: IconButton(
+                    icon: Icon(Icons.add, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        itemCount++;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: Text('Yes'),
+          onPressed: () async {
+            await BalanceService.addOrder(widget.reservation.id, widget.item.id, itemCount, widget.item.price);
+            Navigator.of(context).pop(); // Close the dialog
+            Fluttertoast.showToast(
+              msg: "${widget.item.name} x$itemCount added to Room ${widget.room.id} - ${widget.room.name}",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
+          },
+        ),
+        TextButton(
+          child: Text('No'),
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the dialog
+          },
+        ),
+      ],
+    );
+  }
 }
