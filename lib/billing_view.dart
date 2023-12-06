@@ -107,6 +107,8 @@ class _BillingViewState extends State<BillingView> {
                             context: context,
                             builder: (context) => BillingDetailsDialog(
                               reservationId: reservation.id,
+                              roomName: room?.name ?? '', // Add room number here
+                              guestSurname: guest?.surname ?? '', // Add guest surname here
                               onRefresh: refreshState, // Pass the refreshState method as a callback
                             ),
                           );
@@ -173,7 +175,10 @@ class _BillingViewState extends State<BillingView> {
   // Start periodic fetch of reservations and guests
   void _startPeriodicFetch() {
     _timer?.cancel();
-    _timer = Timer.periodic(Duration(seconds: REFRESH_TIMER), (Timer t) => fetchReservationsAndGuests());
+    if (_timer == null || !_timer!.isActive) {
+      _timer = Timer.periodic(Duration(seconds: REFRESH_TIMER), (Timer t) =>
+          fetchReservationsAndGuests());
+    }
   }
 
   @override
@@ -188,9 +193,13 @@ class _BillingViewState extends State<BillingView> {
 
 
 class BillingDetailsDialog extends StatelessWidget {
+
   final int reservationId;
-  final Function onRefresh; // Add this
-  BillingDetailsDialog({required this.reservationId, required this.onRefresh});
+  final String roomName;
+  final String guestSurname;
+  final Function onRefresh;
+
+  BillingDetailsDialog({required this.reservationId, required this.roomName, required this.guestSurname, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +233,7 @@ class BillingDetailsDialog extends StatelessWidget {
                     entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
                     return Container(
-                      height: MediaQuery.of(context).size.height, /* subtract any additional padding or margins if needed */
+                      height: MediaQuery.of(context).size.height,
                       width: MediaQuery.of(context).size.width,
                       child: ListView.builder(
                         shrinkWrap: true,
@@ -259,7 +268,7 @@ class BillingDetailsDialog extends StatelessWidget {
 
   Widget _buildListItem(BuildContext context, BalanceEntry entry) { // Show order details for menu items and payment method for payments
     if (entry.menuItemId == 0 || entry.menuItemId == -1) {
-      String paymentMethod = entry.menuItemId == 0 ? "cash" : "card";
+      String paymentMethod = entry.menuItemId == 0 ? "CASH" : "CARD";
       return ListTile(
         title: Text(
           'Payed $paymentMethod : ${entry.amount.toStringAsFixed(2)}€',
@@ -297,6 +306,8 @@ class BillingDetailsDialog extends StatelessWidget {
       builder: (BuildContext context) {
         return AddPaymentDialog(
           reservationId: reservationId,
+          roomName: roomName, // Pass room number
+          guestSurname: guestSurname, // Pass guest surname
           onPaymentAdded: onRefresh, // Use the callback here
         );
       },
@@ -306,10 +317,13 @@ class BillingDetailsDialog extends StatelessWidget {
 
 
 class AddPaymentDialog extends StatefulWidget {
+
   final int reservationId;
+  final String roomName;
+  final String guestSurname;
   final Function onPaymentAdded;
 
-  AddPaymentDialog({required this.reservationId, required this.onPaymentAdded});
+  AddPaymentDialog({required this.reservationId, required this.roomName, required this.guestSurname, required this.onPaymentAdded});
 
   @override
   _AddPaymentDialogState createState() => _AddPaymentDialogState();
@@ -317,9 +331,10 @@ class AddPaymentDialog extends StatefulWidget {
 
 
 
+
 class _AddPaymentDialogState extends State<AddPaymentDialog> {
   final TextEditingController _amountController = TextEditingController();
-  String _paymentMethod = 'cash';  // Default payment method
+  String _paymentMethod = 'CASH';  // Default payment method
   double unpaidAmount = 0.0;
 
   @override
@@ -351,9 +366,9 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _paymentMethodSelector('cash'),
+                _paymentMethodSelector('CASH'),
                 SizedBox(width: 10),
-                _paymentMethodSelector('card'),
+                _paymentMethodSelector('CARD'),
               ],
             ),
           ],
@@ -412,15 +427,42 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
       return;
     }
 
+    // Confirmation dialogue
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirm Payment'),
+        content: Text('Pay: ${amount.toStringAsFixed(2)}€ $_paymentMethod\nRoom: ${widget.roomName}\nGuest: ${widget.guestSurname}'),
+        actions: [
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(false), // returns false
+          ),
+          ElevatedButton(
+            child: Text('Confirm'),
+            onPressed: () => Navigator.of(context).pop(true), // returns true
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (!confirm) return; // If the user cancels, stop the function here
+
     try {
-      // TODO: Confirm payment !!!!
+      // Process the payment
       await BalanceService.addPayment(widget.reservationId, _paymentMethod, amount);
       // Handle successful payment addition
       widget.onPaymentAdded(); // Call the callback after processing the payment
       Navigator.of(context).pop();
       Navigator.of(context).pop();
     } catch (e) {
-      Exception('Failed to add payment: $e');
+      Fluttertoast.showToast(
+        msg: "Failed to add payment: $e",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+      );
     }
   }
+
 }

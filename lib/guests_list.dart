@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'db_helper.dart';
 import 'dbObjects.dart';
 
@@ -11,22 +14,38 @@ class GuestsListView extends StatefulWidget {
 class _GuestsListViewState extends State<GuestsListView> {
   List<Guest> guests = [];
   List<Guest> filteredGuests = [];
+  Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
+    refreshTimer?.cancel();
     _fetchGuests();
+    startRefreshTimer();
+  }
+
+  void startRefreshTimer() {
+    refreshTimer?.cancel();
+    const refreshInterval = Duration(seconds: REFRESH_TIMER);
+    refreshTimer = Timer.periodic(refreshInterval, (Timer t) => _fetchGuests());
+  }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel();
+    super.dispose();
   }
 
   void _fetchGuests() async {
     try {
       var fetchedGuests = await GuestService.getGuests();
-      setState(() {
-        guests = fetchedGuests;
-        filteredGuests = fetchedGuests;
-      });
+      if (mounted) {
+        setState(() {
+          guests = fetchedGuests;
+          filteredGuests = fetchedGuests;
+        });
+      }
     } catch (e) {
-      // Handle exceptions
       print('Failed to fetch guests: $e');
     }
   }
@@ -39,7 +58,16 @@ class _GuestsListViewState extends State<GuestsListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return VisibilityDetector(
+      key: Key('guests-list-view-key'),
+      onVisibilityChanged: (VisibilityInfo info) {
+        if (info.visibleFraction == 0) {
+          refreshTimer?.cancel();
+        } else {
+          startRefreshTimer();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text('Guests'),
       ),
@@ -68,14 +96,15 @@ class _GuestsListViewState extends State<GuestsListView> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => GuestReservationsView(guest: guest),
-                      ),
-                    );
-                  },
-                );
-              },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -120,8 +149,7 @@ class GuestReservationsView extends StatelessWidget {   // TODO: Fetch only Gues
                   title: Text('Room ${reservation.roomId}'),
                   subtitle: Text('Check-In: ${formatDate(reservation.startDate)}\n'
                       'Check-Out: ${formatDate(reservation.endDate)}\n'
-                      'Due Amount: \$${reservation.dueAmount.toString()}'),
-                  // Optionally, add trailing or leading widgets
+                      'Due Amount: ${reservation.dueAmount.toString()}€'),
                 );
               },
             );

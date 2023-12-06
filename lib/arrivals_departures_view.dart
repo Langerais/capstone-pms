@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
 import 'package:capstone_pms/main.dart';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'dbObjects.dart';
 import 'db_helper.dart';
 import 'db_helper.dart' as DBHelper;
@@ -37,6 +40,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   List<Reservation> reservations = [];
   List<Room> rooms = [];
   List<Guest> guests = [];
+  Timer? refreshTimer;
   bool isLoading = true;
 
   @override
@@ -75,7 +79,16 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       //fetchReservations();
       return Center(child: CircularProgressIndicator());
     }
-    return SingleChildScrollView(
+    return VisibilityDetector(
+      key: Key('arrivals-departures-key'), // Unique key for VisibilityDetector
+      onVisibilityChanged: (VisibilityInfo info) {
+        if (info.visibleFraction == 0) {
+          cancelRefreshTimer(); // Cancel timer when widget is not visible
+        } else {
+          startRefreshTimer(); // Start timer when widget is visible
+        }
+      },
+      child: SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Column(
         children: [
@@ -190,12 +203,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       Expanded(
                         child: buildReservationCell(room.id, currentWeekStart.add(Duration(days: i))),
                       ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -292,14 +306,33 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     return Colors.white; // Room available
   }
 
+  void startRefreshTimer() {
+    cancelRefreshTimer();
+    if (refreshTimer == null || !refreshTimer!.isActive) {
+      const refreshInterval = Duration(seconds: REFRESH_TIMER); // Set your desired interval
+      refreshTimer = Timer.periodic(refreshInterval, (Timer t) => fetchData());
+    }
+  }
+
+  void cancelRefreshTimer() {
+    refreshTimer?.cancel();
+    refreshTimer = null;
+  }
+
+  @override
+  void dispose() {
+    cancelRefreshTimer();
+    super.dispose();
+  }
+
+
+
   Future<String> getGuestFullName(int guestId) async {  //TODO: Remove this function ???
-    //List<Guest> guests = await GuestService.getGuests();
     Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
     return guest != null ? '${guest.name} ${guest.surname}' : 'Unknown';
   }
 
   Future<String> getGuestSurname(int guestId) async {
-    //List<Guest> guests = await GuestService.getGuests();
     Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
     return guest != null ? guest.surname : 'Unknown';
   }
@@ -368,7 +401,6 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           Text("Phone: ${guest.phone}"),
           Text("Check-in Date: ${formatDate(reservation.startDate)}"),
           Text("Check-out Date: ${formatDate(reservation.endDate)}"),
-          // Add more details as needed
         ],
       ),
     );

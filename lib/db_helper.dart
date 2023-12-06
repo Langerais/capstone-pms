@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 // TODO: Save URL in a config file
 const BASE_URL = 'http://16.16.140.209:5000';  //TODO: Move to config file
-const REFRESH_TIMER = 600;  // Refresh db every X seconds TODO: Move to config file
+const REFRESH_TIMER = 10;  // Refresh db every X seconds TODO: Move to config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
