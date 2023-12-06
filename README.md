@@ -9,5 +9,5 @@ Min Android SDK: 21
 
 ## TODO:
 - [ ] Arrivals/Departures Table alignment
-- [ ] Arrivals/Departures Table - Fix Room Numbers column colors
-- [ ] Reservation Info on click
+- [ ] Add Payment confirmation dialog
+- [ ] Add Transaction removal dialog for Admin

@@ -194,44 +194,66 @@ class BillingDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Billing Details'),
-      content: FutureBuilder<List<BalanceEntry>>(
-        future: BalanceService.getBalanceEntriesForReservation(reservationId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Text('No billing details available.');
-          }
-          List<BalanceEntry> entries = snapshot.data!;
-          entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-          return Container(
-            height: MediaQuery.of(context).size.height, /* subtract any additional padding or margins if needed */
-            width: MediaQuery.of(context).size.width,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: entries.length,
-              itemBuilder: (context, index) {
-                BalanceEntry entry = entries[index];
-                return _buildListItem(context, entry);
-              },
+    return Dialog(
+      insetPadding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.95, // Dialog width
+          maxHeight: MediaQuery.of(context).size.height * 0.90, // Dialog height
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Billing Details'),
             ),
-          );
-        },
+            Divider(),
+            Flexible( // Use Flexible to allow the content to shrink
+              child: SingleChildScrollView( // Wrap the content in a SingleChildScrollView
+                child: FutureBuilder<List<BalanceEntry>>(
+                  future: BalanceService.getBalanceEntriesForReservation(reservationId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Text('No billing details available.');
+                    }
+                    List<BalanceEntry> entries = snapshot.data!;
+                    entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+                    return Container(
+                      height: MediaQuery.of(context).size.height, /* subtract any additional padding or margins if needed */
+                      width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: entries.length,
+                        itemBuilder: (context, index) {
+                          BalanceEntry entry = entries[index];
+                          return _buildListItem(context, entry);
+                          },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            ButtonBar(
+              children: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Close'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _showAddPaymentDialog(context, reservationId),
+                  child: Text('Add Payment'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close'),
-        ),
-        ElevatedButton(
-          onPressed: () => _showAddPaymentDialog(context, reservationId),
-          child: Text('Add Payment'),
-        ),
-      ],
     );
   }
 
