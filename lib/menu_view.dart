@@ -138,7 +138,9 @@ class CategoryItemsView extends StatelessWidget {
       List<Reservation> activeReservations = await ReservationService.getReservationsByDateRange(today, today);
       List<Guest> guests = await GuestService.getGuests();
       List<Room> rooms = await RoomService.getRooms();
+
       _showReservationsDialog(context, item, activeReservations, guests, rooms);
+
     } catch (e) {
       // Handle errors or show a message if there is an issue fetching data
       print('Error fetching data: $e');
@@ -146,6 +148,13 @@ class CategoryItemsView extends StatelessWidget {
   }
 
   void _showReservationsDialog(BuildContext context, MenuItem item, List<Reservation> reservations, List<Guest> guests, List<Room> rooms) {
+
+    reservations.sort((a, b) {
+      Room roomA = rooms.firstWhere((r) => r.id == a.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'ERROR'));
+      Room roomB = rooms.firstWhere((r) => r.id == b.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'ERROR'));
+      return roomA.name.compareTo(roomB.name);
+    });
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
