@@ -508,8 +508,6 @@ class _EditItemDialogState extends State<EditItemDialog> {
               child: Text('Save'),
               onPressed: () async {
 
-
-
                 try {
 
                   if (nameController.text.isEmpty || priceController.text.isEmpty || double.parse(priceController.text) < 0) {
@@ -553,7 +551,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-            ), // ... Save and Cancel buttons
+            ),
           ],
 
         ),

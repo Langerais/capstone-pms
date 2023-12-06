@@ -209,8 +209,8 @@ class BillingDetailsDialog extends StatelessWidget {
           entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
           return Container(
-            height: 300, // Adjust the height as needed
-            width: double.maxFinite,
+            height: MediaQuery.of(context).size.height, /* subtract any additional padding or margins if needed */
+            width: MediaQuery.of(context).size.width,
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: entries.length,
@@ -235,18 +235,18 @@ class BillingDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildListItem(BuildContext context, BalanceEntry entry) {
+  Widget _buildListItem(BuildContext context, BalanceEntry entry) { // Show order details for menu items and payment method for payments
     if (entry.menuItemId == 0 || entry.menuItemId == -1) {
       String paymentMethod = entry.menuItemId == 0 ? "cash" : "card";
       return ListTile(
         title: Text(
-          'PAYED ($paymentMethod)',
+          'Payed $paymentMethod : ${entry.amount.toStringAsFixed(2)}€',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.green,
           ),
         ),
-        subtitle: Text('Amount: \$${entry.amount.toStringAsFixed(2)}'),
+        subtitle: Text('${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
       );
     }
 
@@ -261,8 +261,9 @@ class BillingDetailsDialog extends StatelessWidget {
         }
         MenuItem menuItem = itemSnapshot.data!;
         return ListTile(
-          title: Text('${menuItem.name}'),
-          subtitle: Text('Amount: \$${entry.amount.toStringAsFixed(2)} - Quantity: ${entry.numberOfItems}'),
+          title: Text('${menuItem.name} : ${entry.numberOfItems} : ${entry.amount.toStringAsFixed(2)}€'),
+          subtitle: Text('${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
+
         );
       },
     );
@@ -306,7 +307,6 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
   }
 
   void _fetchUnpaidAmount() async {
-    // Assuming BalanceService.calculateUnpaidAmount returns a Future<double>
     double amount = await BalanceService.calculateUnpaidAmount(widget.reservationId);
     setState(() {
       unpaidAmount = amount;
@@ -391,7 +391,7 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
     }
 
     try {
-      // TODO: Confirm payment
+      // TODO: Confirm payment !!!!
       await BalanceService.addPayment(widget.reservationId, _paymentMethod, amount);
       // Handle successful payment addition
       widget.onPaymentAdded(); // Call the callback after processing the payment

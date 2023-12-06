@@ -91,12 +91,15 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     );
 
     drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.monetization_on),
-        title: Text('Bar Bill / WIP'),
-        onTap: () {
-          Navigator.pushNamed(context, '/billing_view'); // Navigate to Restaurant Billing
-        },
+      Container(
+        color: Colors.blue[100], // Change this to your desired color
+        child: ListTile(
+          leading: Icon(Icons.monetization_on),
+          title: Text('Bar Bill'),
+          onTap: () {
+            Navigator.pushNamed(context, '/billing_view'); // Navigate to Restaurant Billing
+          },
+        ),
       ),
     );
   }
