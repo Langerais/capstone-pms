@@ -168,9 +168,10 @@ class MenuItem {
 class BalanceEntry {
   final int id;
   final int reservationId;
-  final int menuItemId;
+  final int menuItemId; // 0 for cash payments, -1 for credit card payments
   final double amount;
-  final int numberOfItems;  // New field
+  final int numberOfItems;
+  final DateTime timestamp;
 
   BalanceEntry({
     required this.id,
@@ -178,6 +179,7 @@ class BalanceEntry {
     required this.menuItemId,
     required this.amount,
     required this.numberOfItems,
+    required this.timestamp,
   });
 
   factory BalanceEntry.fromJson(Map<String, dynamic> json) {
@@ -187,6 +189,7 @@ class BalanceEntry {
       menuItemId: json['menu_item_id'] as int,
       amount: json['amount'] != null ? double.parse(json['amount']) : 0.0,
       numberOfItems: json['number_of_items'] as int? ?? 1,  // Default to 1 if not provided
+      timestamp: DateTime.parse(json['transaction_timestamp']),
     );
   }
 }

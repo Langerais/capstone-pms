@@ -93,9 +93,9 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.monetization_on),
-        title: Text('Bar Bill / TBD'),
+        title: Text('Bar Bill / WIP'),
         onTap: () {
-          // Navigate to Room Management
+          Navigator.pushNamed(context, '/billing_view'); // Navigate to Restaurant Billing
         },
       ),
     );

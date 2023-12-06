@@ -5,7 +5,8 @@ import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
 
 // TODO: Save URL in a config file
-const BASE_URL = 'http://16.16.140.209:5000';
+const BASE_URL = 'http://16.16.140.209:5000';  //TODO: Move to config file
+const REFRESH_TIMER = 600;  // Refresh db every X seconds TODO: Move to config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
@@ -71,6 +72,34 @@ class GuestService {
     }
   }
 
+
+  static Future<Guest> getGuest(int guestId) async {
+    var url = Uri.parse('$BASE_URL/guests/get_guest/$guestId');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      return Guest.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load guest');
+    }
+  }
+
+
+  static Future<List<Guest>> getGuestsByIds(List<int> guestIds) async {
+    var url = Uri.parse('$BASE_URL/guests/get_guests_by_ids');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({'guest_ids': guestIds}),
+    );
+    if (response.statusCode == 200) {
+      List<dynamic> jsonData = jsonDecode(response.body);
+      return jsonData.map((json) => Guest.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load guests');
+    }
+  }
+
+
   static List<Guest> filterGuests(String searchText, List<Guest> allGuests) {
     return allGuests.where((guest) {
       return guest.name.toLowerCase().contains(searchText.toLowerCase()) ||
@@ -89,7 +118,9 @@ class RoomService {
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
-      return jsonData.map((json) => Room.fromJson(json)).toList();
+      List<Room> rooms = jsonData.map((json) => Room.fromJson(json)).toList();
+      rooms.sort((a, b) => a.name.compareTo(b.name));  // Sort rooms by name
+      return rooms;
     } else {
       if (kDebugMode) {
         print('Failed to load rooms. Status code: ${response.statusCode}. Response body: ${response.body}');
@@ -97,6 +128,18 @@ class RoomService {
       throw Exception('Failed to load rooms');
     }
   }
+
+  static Future<Room> getRoom(int roomId) async {
+    var url = Uri.parse('$BASE_URL/rooms/get_room/$roomId');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      return Room.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load room');
+    }
+  }
+
+
 }
 
 DateTime? parseDate(String dateString) {
@@ -141,8 +184,9 @@ class MenuCategoryService {
 
 class MenuService {
   static Future<MenuItem> getMenuItem(int itemId) async {
-    var url = Uri.parse('$BASE_URL/menu_management/get_item/$itemId');
+    var url = Uri.parse('$BASE_URL/menu/get_item/$itemId');
     var response = await http.get(url);
+    print(MenuItem.fromJson(jsonDecode(response.body)));
     if (response.statusCode == 200) {
       return MenuItem.fromJson(jsonDecode(response.body));
     } else {
@@ -255,6 +299,7 @@ class BalanceService {
         'payment_amount': amount,
       }),
     );
+    print(response.body);
     if (response.statusCode != 201) {
       throw Exception('Failed to add payment');
     }
@@ -268,6 +313,18 @@ class BalanceService {
       return jsonData.map((json) => BalanceEntry.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load balance entries for reservation $reservationId');
+    }
+  }
+
+
+  static Future<double> calculateUnpaidAmount(int reservationId) async {
+    var url = Uri.parse('$BASE_URL/reservations/calculate_unpaid_amount/$reservationId');
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return double.parse(data['unpaid_amount']);
+    } else {
+      throw Exception('Failed to calculate unpaid amount');
     }
   }
 
