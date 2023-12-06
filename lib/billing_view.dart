@@ -386,7 +386,7 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
         gravity: ToastGravity.CENTER,
         timeInSecForIosWeb: 1,
       );
-      _amountController.text = 'unpaidAmount.toStringAsFixed(2)';
+      _amountController.text = unpaidAmount.toStringAsFixed(2);
       return;
     }
 
