@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
 
 // TODO: Save URL in a config file
 const BASE_URL = 'http://16.16.140.209:5000';  //TODO: Move to config file
-const REFRESH_TIMER = 10;  // Refresh db every X seconds TODO: Move to config file
+const REFRESH_TIMER = 600;  // Refresh db every X seconds TODO: Move to config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
@@ -305,11 +306,44 @@ class BalanceService {
     }
   }
 
+  static Future<bool> deleteBalanceEntry(int balanceEntryId) async {
+    final String url = '$BASE_URL/menu/remove_balance_entry/$balanceEntryId';
+
+    try {
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(
+          msg: "Balance entry removed successfully",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+        return true; // Successfully deleted
+      } else {
+        Fluttertoast.showToast(
+          msg: "Error removing balance entry: ${response.body}",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+        return false; // Failed to delete
+      }
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg: "Error: $e",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return false; // Error occurred
+    }
+  }
+
   static Future<List<BalanceEntry>> getBalanceEntriesForReservation(int reservationId) async {
     var url = Uri.parse('$BASE_URL/menu/get_balance_entries/$reservationId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
+      print(jsonData);
+      print(jsonData.length);
       return jsonData.map((json) => BalanceEntry.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load balance entries for reservation $reservationId');

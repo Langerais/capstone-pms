@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
-import 'package:capstone_pms/main.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'dbObjects.dart';
 import 'db_helper.dart';
-import 'db_helper.dart' as DBHelper;
 import 'package:collection/collection.dart';
 
 class ArrivalsDeparturesScreen extends StatelessWidget {

@@ -100,8 +100,8 @@ class _BillingViewState extends State<BillingView> {
                       double unpaidAmount = unpaidAmountSnapshot.data!;
 
                       return ListTile(
-                        title: Text('${room?.name} - ${guest?.surname}'),
-                        subtitle: Text('Check-out: ${DateFormat('yyyy-MM-dd').format(reservation.endDate)} - Due: \$${unpaidAmount.toStringAsFixed(2)}'),
+                        title: Text('${room?.name} - ${guest?.surname} : ${unpaidAmount.toStringAsFixed(2)}€'),
+                        subtitle: Text('Check-out: ${DateFormat('yyyy-MM-dd').format(reservation.endDate)}'),
                         onTap: () {
                           showDialog(
                             context: context,
@@ -164,7 +164,7 @@ class _BillingViewState extends State<BillingView> {
             (roomsMap[a.roomId]?.name ?? '').compareTo(roomsMap[b.roomId]?.name ?? ''));
         setState(() {});
       } catch (e) {
-        // Handle errors
+        // TODO: Handle errors
       }
       setState(() {});
     } catch (e) {
@@ -193,7 +193,6 @@ class _BillingViewState extends State<BillingView> {
 
 
 class BillingDetailsDialog extends StatelessWidget {
-
   final int reservationId;
   final String roomName;
   final String guestSurname;
@@ -207,45 +206,39 @@ class BillingDetailsDialog extends StatelessWidget {
       insetPadding: EdgeInsets.zero,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.95, // Dialog width
-          maxHeight: MediaQuery.of(context).size.height * 0.90, // Dialog height
+          maxWidth: MediaQuery.of(context).size.width * 0.95,
+          maxHeight: MediaQuery.of(context).size.height * 0.90,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Billing Details'),
+              child: Text('Billing Details for Room $roomName, Guest $guestSurname'),
             ),
             Divider(),
-            Flexible( // Use Flexible to allow the content to shrink
-              child: SingleChildScrollView( // Wrap the content in a SingleChildScrollView
-                child: FutureBuilder<List<BalanceEntry>>(
-                  future: BalanceService.getBalanceEntriesForReservation(reservationId),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Text('No billing details available.');
-                    }
-                    List<BalanceEntry> entries = snapshot.data!;
-                    entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+            Flexible(
+              child: FutureBuilder<List<BalanceEntry>>(
+                future: BalanceService.getBalanceEntriesForReservation(reservationId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No billing details available.');
+                  }
+                  List<BalanceEntry> entries = snapshot.data!;
+                  entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-                    return Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: entries.length,
-                        itemBuilder: (context, index) {
-                          BalanceEntry entry = entries[index];
-                          return _buildListItem(context, entry);
-                          },
-                      ),
-                    );
-                  },
-                ),
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      BalanceEntry entry = entries[index];
+                      return _buildListItem(context, entry);
+                    },
+                  );
+                },
               ),
             ),
             ButtonBar(
@@ -266,39 +259,123 @@ class BillingDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildListItem(BuildContext context, BalanceEntry entry) { // Show order details for menu items and payment method for payments
+
+
+  Widget _buildListItem(BuildContext context, BalanceEntry entry) {
+    bool isAdmin = Auth.getUserRole() == UserGroup.Admin; // Check if the user is admin
+    String paymentMethod = entry.menuItemId == 0 ? "CASH" : "CARD";
+
     if (entry.menuItemId == 0 || entry.menuItemId == -1) {
-      String paymentMethod = entry.menuItemId == 0 ? "CASH" : "CARD";
       return ListTile(
         title: Text(
           'Payed $paymentMethod : ${entry.amount.toStringAsFixed(2)}€',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.green,
           ),
         ),
-        subtitle: Text('${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
+        subtitle: Text(DateFormat('dd/MM/yyyy').format(entry.timestamp)),
+        trailing: isAdmin ? IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () =>
+              _showDeleteConfirmationDialog(
+                  context, entry, () => refreshDialog(context)),
+        ) : null,
+        onTap: isAdmin ? () =>
+            _showDeleteConfirmationDialog(
+                context, entry, () => refreshDialog(context)) : null,
+      );
+    } else {
+      // This is an order entry
+      return FutureBuilder<MenuItem>(
+        future: MenuService.getMenuItem(entry.menuItemId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return ListTile(title: Text('Loading...'));
+          }
+          if (!snapshot.hasData) {
+            return ListTile(title: Text('Item not found'));
+          }
+          MenuItem menuItem = snapshot.data!;
+          return _buildOrderTile(context, entry, isAdmin, menuItem.name);
+        },
       );
     }
 
-    return FutureBuilder<MenuItem>(
-      future: MenuService.getMenuItem(entry.menuItemId),
-      builder: (context, itemSnapshot) {
-        if (itemSnapshot.connectionState == ConnectionState.waiting) {
-          return ListTile(title: Text('Loading...'));
-        }
-        if (!itemSnapshot.hasData) {
-          return ListTile(title: Text('Item not found'));
-        }
-        MenuItem menuItem = itemSnapshot.data!;
-        return ListTile(
-          title: Text('${menuItem.name} : ${entry.numberOfItems} : ${entry.amount.toStringAsFixed(2)}€'),
-          subtitle: Text('${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
+  }
 
+  Widget _buildOrderTile(BuildContext context, BalanceEntry entry, bool isAdmin, String itemName) {
+    return ListTile(
+      title: Text(
+        '${entry.numberOfItems} x $itemName - ${entry.amount.toStringAsFixed(2)}€',
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+      ),
+      subtitle: Text(DateFormat('dd/MM/yyyy').format(entry.timestamp)),
+      trailing: _buildTrailingIcon(context, entry, isAdmin),
+    );
+  }
+
+  IconButton? _buildTrailingIcon(BuildContext context, BalanceEntry entry, bool isAdmin) {
+    return isAdmin ? IconButton(
+      icon: const Icon(Icons.delete, color: Colors.red),
+      onPressed: () => _showDeleteConfirmationDialog(context, entry, () => refreshDialog(context)),
+    ) : null;
+  }
+
+  void refreshDialog(BuildContext context) {
+    Navigator.pop(context); // Close the current dialog
+    onRefresh(); // Refresh the main BillingView
+    showDialog(
+      context: context,
+      builder: (context) => BillingDetailsDialog(
+        reservationId: reservationId,
+        roomName: roomName,
+        guestSurname: guestSurname,
+        onRefresh: onRefresh,
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, BalanceEntry entry, VoidCallback refreshDialog) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Delete'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Room: $roomName'),
+                Text('Guest: $guestSurname'),
+                Text('Amount: €${entry.amount.toStringAsFixed(2)}'),
+                Text('Date: ${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
+                Text('Are you sure you want to delete this entry?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the confirmation dialog first
+                bool success = await BalanceService.deleteBalanceEntry(entry.id);
+                if (success) {
+                  onRefresh(); // Refresh the main BillingView
+                  refreshDialog(); // Refresh and reopen BillingDetailsDialog
+                }
+              },
+            ),
+          ],
         );
       },
     );
   }
+
+
 
   void _showAddPaymentDialog(BuildContext context, int reservationId) {
     showDialog(
@@ -306,9 +383,9 @@ class BillingDetailsDialog extends StatelessWidget {
       builder: (BuildContext context) {
         return AddPaymentDialog(
           reservationId: reservationId,
-          roomName: roomName, // Pass room number
-          guestSurname: guestSurname, // Pass guest surname
-          onPaymentAdded: onRefresh, // Use the callback here
+          roomName: roomName,
+          guestSurname: guestSurname,
+          onPaymentAdded: onRefresh,
         );
       },
     );
