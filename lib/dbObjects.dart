@@ -240,4 +240,15 @@ class CleaningAction {
   }
 }
 
+class RoomCleaningData {
+  final Room room;
+  Map<int, CleaningSchedule> schedules; // Map of actionId to CleaningSchedule
+
+  RoomCleaningData({required this.room, required this.schedules});
+
+  void updateSchedule(CleaningSchedule schedule) {
+    schedules[schedule.actionId] = schedule;
+  }
+}
+
 

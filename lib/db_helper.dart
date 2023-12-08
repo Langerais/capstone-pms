@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 import 'dbObjects.dart';
 import 'package:http/http.dart' as http;
@@ -411,7 +412,26 @@ class CleaningService {
       throw Exception('Failed to schedule cleaning: ${response.body}');
     }
 
-    // Handle the successful response if needed
+  }
+
+  static Future<void> toggleCleaningTaskStatus(int scheduleId, String newStatus, String completedDate) async {
+    var url = Uri.parse('$BASE_URL/cleaning_management/toggle_task_status/$scheduleId');
+
+    //DateTime completed = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
+    //String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'id': scheduleId,
+        'completed_date': completedDate,
+        'task_status': newStatus,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to toggle task status. Error: ${response.body}');
+    }
   }
 
 }

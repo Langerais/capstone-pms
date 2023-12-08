@@ -13,6 +13,7 @@ class _CleaningScheduleViewState extends State<CleaningView> {
   List<Reservation> reservations = [];
   List<Room> rooms = [];
   List<CleaningAction> cleaningActions = [];
+  //List<RoomCleaningData> roomCleaningDataList = [];
   TextEditingController daysController = TextEditingController();
 
   @override
@@ -31,6 +32,8 @@ class _CleaningScheduleViewState extends State<CleaningView> {
     // Fetch all rooms and sort them by name.
     rooms = await RoomService.getRooms();
     rooms.sort((a, b) => a.name.compareTo(b.name));
+
+
 
     // No need to filter by active reservations as we are showing all rooms.
     setState(() {});
@@ -161,16 +164,13 @@ class _CleaningScheduleViewState extends State<CleaningView> {
 
   Future<List<DataRow>> _buildRows() async {
     List<DataRow> rows = [];
-    final double cellWidth = 50; // Define a fixed width for cells
+    final double cellWidth = double.infinity; // Define a fixed width for cells
     //final double cellHeight = 50; // Define a fixed height for cells
 
     for (var room in rooms) {
       List<CleaningSchedule> roomSchedules = await CleaningService.getRoomCleaningSchedule(room.id, selectedDate, selectedDate);
 
-      List<DataCell> cells = [
-        DataCell(Container(width: cellWidth, child: Text(room.name))),
-      ];
-
+      List<DataCell> cells = [DataCell(Text(room.name))];
       cells.addAll(
         cleaningActions.map((action) {
           // Find the schedule for this action
@@ -179,33 +179,21 @@ class _CleaningScheduleViewState extends State<CleaningView> {
             orElse: () => CleaningSchedule(id: 0, roomId: room.id, actionId: action.id, scheduledDate: selectedDate, status: ''),
           );
 
-          Color cellColor = Colors.grey; // Default color
-          if (schedule.status == 'pending') {
-            cellColor = Colors.red;
-          } else if (schedule.status == 'completed') {
-            cellColor = Colors.green;
-          }
 
           return DataCell(
             Container(
               width: cellWidth,
-              height: cellWidth*0.9,
-              padding: EdgeInsets.all(10),
-              //height: cellHeight,
-              color: cellColor,
-              child: Text(''), // Placeholder text if needed
+              height: cellWidth,
+              //color: cellColor, // This will set the background color for the entire cell
+              child: Center(
+                child: schedule.status == 'pending'  // Display different icons based on the status
+                    ? Icon(Icons.check_box_outline_blank, color: Colors.red)
+                    : schedule.status == 'completed'
+                    ? Icon(Icons.check_box, color: Colors.green)
+                    : Icon(Icons.circle, color: Colors.grey),
+              ),
             ),
-            onTap: () {
-              if(schedule.id != 0) {
-                // Mark cleaning as completed
-                //CleaningService.markCleaningAsCompleted(schedule.id);
-                print(room.name + ' ' + action.name + ' ' + schedule.id.toString() + ' ' + schedule.status);
-              } else {
-                print(room.name + ' ' + action.name + ' ' + schedule.id.toString() + ' Not scheduled');
-              }
-
-              //print(schedule.id);
-            },
+              onTap: schedule.id != 0 ? () => _toggleStatus(schedule) : null,
           );
         }),
       );
@@ -216,5 +204,19 @@ class _CleaningScheduleViewState extends State<CleaningView> {
     return rows;
   }
 
+  // Helper function to toggle the status of a cleaning schedule
+  void _toggleStatus(CleaningSchedule schedule) async {
+    String newStatus = schedule.status == 'pending' ? 'completed' : 'pending';
+    try {
+      String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+      await CleaningService.toggleCleaningTaskStatus(schedule.id, newStatus, DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()));
+      // After toggling status, refresh the row or entire table as needed
+      setState(() {
+        _fetchReservations();
+      });
+    } catch (e) {
+      print('Failed to toggle cleaning task status: $e');
+    }
+  }
 
 }
