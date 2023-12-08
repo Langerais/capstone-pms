@@ -1,6 +1,7 @@
 //import 'dart:html';
 import 'package:capstone_pms/billing_view.dart';
 import 'package:flutter/material.dart';
+import 'cleaning_view.dart';
 import 'drawer_menu.dart';
 import 'arrivals_departures_view.dart';
 import 'guests_list.dart';
@@ -27,7 +28,8 @@ class MyApp extends StatelessWidget {
         '/arrivals_departures': (context) => ArrivalsDeparturesScreen(), //Add route for Arrivals/Departures
         '/guests_list': (context) => GuestsListView(), // Guests list view route
         '/menu_view': (context) => MenuView(), // Menu view route
-        '/billing_view': (context) => BillingView(), // Menu view route
+        '/billing_view': (context) => BillingView(), // Billing view route
+        '/cleaning_view': (context) => CleaningView(), // Cleaning view route
       },
     );
   }

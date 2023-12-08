@@ -365,6 +365,58 @@ class BalanceService {
 }
 
 
+class CleaningService {
+  static Future<List<CleaningSchedule>> getRoomCleaningSchedule(int roomId, DateTime startDate, DateTime endDate) async {
+    var url = Uri.parse('$BASE_URL/cleaning_management/get_cleaning_schedule/room/$roomId/date_range')
+        .replace(queryParameters: {
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+    });
+
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      return data.map((json) => CleaningSchedule.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load cleaning schedule');
+    }
+  }
+
+  static Future<List<CleaningAction>> getCleaningActions() async {
+    var url = Uri.parse('$BASE_URL/cleaning_management/get_cleaning_actions');
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      List<CleaningAction> actions = jsonData.map((json) => CleaningAction.fromJson(json)).toList();
+      return actions;
+    } else {
+      throw Exception('Failed to load cleaning actions');
+    }
+  }
+
+  static Future<void> scheduleCleaning(DateTime startDate, int days) async {
+    var url = Uri.parse('$BASE_URL/cleaning_management/schedule_cleaning');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'start_date': startDate.toIso8601String().split('T').first, // Formatting the date as 'YYYY-MM-DD'
+        'days': days,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to schedule cleaning: ${response.body}');
+    }
+
+    // Handle the successful response if needed
+  }
+
+}
+
+
 
 
 

@@ -194,3 +194,50 @@ class BalanceEntry {
   }
 }
 
+class CleaningSchedule {
+  final int id;
+  final int roomId;
+  final int actionId;
+  final DateTime scheduledDate;
+  final String status;
+
+  CleaningSchedule({
+    required this.id,
+    required this.roomId,
+    required this.actionId,
+    required this.scheduledDate,
+    required this.status,
+  });
+
+  factory CleaningSchedule.fromJson(Map<String, dynamic> json) {
+    return CleaningSchedule(
+      id: json['id'],
+      roomId: json['room_id'],
+      actionId: json['action_id'],
+      scheduledDate: DateTime.parse(json['scheduled_date']),
+      status: json['status'],
+    );
+  }
+}
+
+class CleaningAction {
+  final int id;
+  final String name;
+  final int frequency;
+
+  CleaningAction({
+    required this.id,
+    required this.name,
+    required this.frequency,
+  });
+
+  factory CleaningAction.fromJson(Map<String, dynamic> json) {
+    return CleaningAction(
+      id: json['id'],
+      name: json['action_name'],
+      frequency: json['frequency_days'],
+    );
+  }
+}
+
+

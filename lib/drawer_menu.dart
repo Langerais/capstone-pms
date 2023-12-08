@@ -5,6 +5,7 @@ import 'authentication.dart';
 class CustomAppBar extends StatelessWidget {
   final UserGroup userGroup;
 
+
   CustomAppBar({required this.userGroup});
 
   @override
@@ -28,6 +29,11 @@ class CustomAppBar extends StatelessWidget {
 Size get preferredSize => Size.fromHeight(kToolbarHeight);  // Required for PreferredSizeWidget
 
 List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
+
+  final colorDone = Colors.green;
+  final colorWIP = Colors.blue;
+
+
   List<Widget> drawerItems = [
     DrawerHeader(
       child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 25)),
@@ -79,7 +85,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   if (userGroup == UserGroup.Bar || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager){
     drawerItems.add(
       Container(
-        color: Colors.blue[100], // Change this to your desired color
+        color: colorDone, // Change this to your desired color
         child: ListTile(
           leading: Icon(Icons.home),
           title: Text('Restoraurant Menu'),
@@ -92,7 +98,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       Container(
-        color: Colors.blue[100], // Change this to your desired color
+        color: colorDone, // Change this to your desired color
         child: ListTile(
           leading: Icon(Icons.monetization_on),
           title: Text('Bar Bill'),
@@ -108,13 +114,16 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   if (userGroup == UserGroup.Cleaning || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager) {
     drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.calendar_month),
-        title: Text('Cleaning Schedule / TBD'),
-        onTap: () {
-          // Navigate to Cleaning Schedule
-        },
-      ),
+        Container(
+          color: colorWIP, // Change this to your desired color
+          child: ListTile(
+            leading: Icon(Icons.calendar_month),
+            title: Text('Cleaning Schedule / WIP'),
+            onTap: () {
+              Navigator.pushNamed(context, '/cleaning_view'); // Navigate to Cleaning Schedule Management
+            },
+          ),
+        ),
     );
   }
 
@@ -125,7 +134,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
       ListTile(
         leading: Icon(Icons.calendar_today),
         title: Text('Arrivals / Departures'),
-        tileColor: Colors.blue[100],
+        tileColor: colorDone,
         onTap: () {
           Navigator.pushNamed(context, '/arrivals_departures');
           // Navigate to Arrivals / Departures
@@ -157,7 +166,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       ListTile(
         leading: Icon(Icons.people),
-        tileColor: Colors.blue[100],
+        tileColor: colorDone,
         title: Text('Guests'),
         onTap: () {
           Navigator.pushNamed(context, '/guests_list'); // Navigate to GuestsListView

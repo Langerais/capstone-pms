@@ -613,5 +613,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
     );
   }
 
+  // TODO: Add a method to add/rename/delete a new category (Check for existing items and set to "Deleted category?")
+
 }
 
