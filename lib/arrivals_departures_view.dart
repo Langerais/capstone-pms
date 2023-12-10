@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'dbObjects.dart';
@@ -55,13 +56,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       DateTime previousWeekStart = currentWeekStart.subtract(Duration(days: 7));
       DateTime nextWeekEnd = currentWeekStart.add(Duration(days: 14));
       reservations = await ReservationService.getReservationsByDateRange(previousWeekStart, nextWeekEnd);
-      print("Reservations fetched");
+      if (kDebugMode) {print("Reservations fetched");}
 
       rooms = await RoomService.getRooms();
-      print("Rooms fetched");
+      if (kDebugMode) {print("Rooms fetched");}
 
       guests = await GuestService.getGuests();
-      print("Guests fetched");
+      if (kDebugMode) {print("Guests fetched");}
 
     } catch (e) {
       print("Error fetching data: $e");
@@ -75,10 +76,10 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
     if (isLoading) {
       //fetchReservations();
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
     return VisibilityDetector(
-      key: Key('arrivals-departures-key'), // Unique key for VisibilityDetector
+      key: const Key('arrivals-departures-key'), // Unique key for VisibilityDetector
       onVisibilityChanged: (VisibilityInfo info) {
         if (info.visibleFraction == 0) {
           cancelRefreshTimer(); // Cancel timer when widget is not visible
@@ -95,7 +96,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   setState(() {
                     currentWeekStart = currentWeekStart.subtract(Duration(days: 7));
@@ -105,10 +106,10 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
               ),
               Text('Week of ${formatDate(currentWeekStart)}'),
               IconButton(
-                icon: Icon(Icons.arrow_forward),
+                icon: const Icon(Icons.arrow_forward),
                 onPressed: () {
                   setState(() {
-                    currentWeekStart = currentWeekStart.add(Duration(days: 7));
+                    currentWeekStart = currentWeekStart.add(const Duration(days: 7));
                     fetchData();
                   });
                 },
@@ -120,7 +121,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     fetchData();
                   });
                 },
-                child: Text('TODAY'),
+                child: const Text('TODAY'),
               ),
             ],
           ),
@@ -135,18 +136,30 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
-                        color: Colors.grey[500],
-                        child: Center(child: Text('Room')),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[500], // Background color
+                          border: const Border(
+                            right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                            bottom: BorderSide(width: 1.0, color: Colors.black), // Bottom border
+                          ),
+                        ),
+                        child: const Center(child: Text('Room')),
                       ),
                     ),
                     for (int i = 0; i < 7; i++)
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.all(8.0),
-                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
-                              currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
-                              ? Colors.grey[500] // Darker grey for today's date
-                              : Colors.grey[300],
+                          decoration: BoxDecoration(
+                            color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
+                                currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
+                                ? Colors.grey[500] // Darker grey for today's date
+                                : Colors.grey[300],
+                            border: const Border(
+                              right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                              bottom: BorderSide(width: 1.0, color: Colors.black), // Bottom border
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(8.0),
                           child: Center(child: Text(formatDate(currentWeekStart.add(Duration(days: i))))),
                         ),
                       ),
@@ -158,18 +171,30 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
-                        color: Colors.grey[500],
-                        child: Center(child: Text('Day')),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[500], // Background color
+                          border: const Border(
+                            right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                            bottom: BorderSide(width: 2.0, color: Colors.black), // Bottom border
+                          ),
+                        ),
+                        child: const Center(child: Text('Day')),
                       ),
                     ),
                     for (int i = 0; i < 7; i++)
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.all(8.0),
-                          color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
-                              currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
-                              ? Colors.grey[500] // Darker grey for today's date
-                              : Colors.grey[300],
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: currentWeekStart.add(Duration(days: i)).day == DateTime.now().day &&
+                                currentWeekStart.add(Duration(days: i)).month == DateTime.now().month
+                                ? Colors.grey[500] // Darker grey for today's date
+                                : Colors.grey[300], // Background color
+                            border: const Border(
+                              right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                              bottom: BorderSide(width: 2.0, color: Colors.black), // Bottom border
+                            ),
+                          ),
                           child: Center(child: Text(formatDayName(currentWeekStart.add(Duration(days: i))))),
                         ),
                       ),
@@ -182,18 +207,25 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           // Scrollable table
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(), // Disable ListView scrolling
+            physics: const NeverScrollableScrollPhysics(), // Disable ListView scrolling
             itemCount: rooms.length, // Assuming you have a list of rooms
             itemBuilder: (BuildContext context, int index) {
               Room room = rooms[index];
 
-              return Container(
+              return IntrinsicHeight( // Wrap Row in an IntrinsicHeight widget
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch, // Align children vertically
                   children: [
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.all(8.0),
-                        color: Colors.grey[500],
+                        decoration: BoxDecoration(
+                          color: Colors.grey[500], // Background color
+                          border: const Border(
+                            right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                            bottom: BorderSide(width: 1.0, color: Colors.black), // Bottom border
+                          ),
+                        ),
                         child: Center(child: Text(room.name)),
                       ),
                     ),
@@ -201,11 +233,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       Expanded(
                         child: buildReservationCell(room.id, currentWeekStart.add(Duration(days: i))),
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                  ],
+                ),
+              );
+            },
+          )
           ],
         ),
       ),
@@ -227,7 +259,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
             onTap: () => onCellTap(roomId, date),
             child: Container(
               padding: EdgeInsets.all(8.0),
-              color: getCellColor(roomId, date),
+              decoration: BoxDecoration(
+                color: getCellColor(roomId, date),
+                border: const Border(
+                  //right: BorderSide(width: 1.0, color: Colors.black), // Right border
+                  bottom: BorderSide(width: 0.2, color: Colors.black), // Bottom border
+                ),
+              ),
               child: Center(child: Text(snapshot.data ?? '')),
             ),
           );
