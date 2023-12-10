@@ -18,6 +18,7 @@ class _CleaningScheduleViewState extends State<CleaningView> {
   List<CleaningAction> cleaningActions = [];
   TextEditingController daysController = TextEditingController();
 
+
   @override
   void initState() {
     super.initState();
@@ -202,7 +203,6 @@ class _CleaningScheduleViewState extends State<CleaningView> {
 
   Future<List<DataRow>> _buildRows() async {
     List<DataRow> rows = [];
-    const double cellWidth = double.infinity; // Define a fixed width for cells
 
     for (var room in rooms) {
       List<CleaningSchedule> roomSchedules = await CleaningService.getRoomCleaningSchedule(room.id, selectedDate, selectedDate);
@@ -210,48 +210,47 @@ class _CleaningScheduleViewState extends State<CleaningView> {
       List<DataCell> cells = [
         DataCell(
           Container(
-// Your desired cell background color
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: Colors.black12, // Your desired cell background color
-              border: Border(
-                right: BorderSide(width: 2.0, color: Colors.black), // Right border
-              ),
+              border: Border(right: BorderSide(width: 2.0, color: Colors.black)), // Right border
             ),
             child: Text(room.name),
           ),
-        )
-    ];
-
+        ),
+      ];
 
       cells.addAll(
         cleaningActions.map((action) {
-          // Find the schedule for this action
           var schedule = roomSchedules.firstWhere(
                 (s) => s.actionId == action.id,
             orElse: () => CleaningSchedule(id: 0, roomId: room.id, actionId: action.id, scheduledDate: selectedDate, status: ''),
           );
 
-
           return DataCell(
-            Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(width: 1.0, color: Colors.black), // Right border
-                ),
-              ),
-              width: cellWidth,
-              height: cellWidth,
-              //color: cellColor, // This will set the background color for the entire cell
-              child: Center(
-                child: schedule.status == 'pending'  // Display different icons based on the status
-                    ? Icon(Icons.check_box_outline_blank, color: Colors.red)
-                    : schedule.status == 'completed'
-                    ? Icon(Icons.check_box, color: Colors.green)
-                    : Icon(Icons.circle, color: Colors.grey),
-              ),
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return GestureDetector(
+                  onTap: () {
+                    _toggleStatus(schedule, () {
+                      setState(() {}); // Local setState to refresh the cell
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(right: BorderSide(width: 1.0, color: Colors.black)), // Right border
+                    ),
+                    child: Center(
+                      child: schedule.status == 'pending'
+                          ? Icon(Icons.check_box_outline_blank, color: Colors.red)
+                          : schedule.status == 'completed'
+                          ? Icon(Icons.check_box, color: Colors.green)
+                          : Icon(Icons.circle, color: Colors.grey),
+                    ),
+                  ),
+                );
+              },
             ),
-              onTap: schedule.id != 0 ? () => _toggleStatus(schedule) : null,
           );
         }),
       );
@@ -263,14 +262,12 @@ class _CleaningScheduleViewState extends State<CleaningView> {
   }
 
   // Helper function to toggle the status of a cleaning schedule
-  void _toggleStatus(CleaningSchedule schedule) async {
+  void _toggleStatus(CleaningSchedule schedule, Function refreshCell) async {
     String newStatus = schedule.status == 'pending' ? 'completed' : 'pending';
     try {
       await CleaningService.toggleCleaningTaskStatus(schedule.id, newStatus, DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()));
-      // After toggling status, refresh the row or entire table as needed
-      setState(() {
-        _fetchData();
-      });
+      schedule.status = newStatus; // Update the schedule's status
+      refreshCell(); // Call the provided function to refresh the cell
     } catch (e) {
       print('Failed to toggle cleaning task status: $e');
     }

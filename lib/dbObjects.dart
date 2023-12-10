@@ -199,7 +199,7 @@ class CleaningSchedule {
   final int roomId;
   final int actionId;
   final DateTime scheduledDate;
-  final String status;
+  String status;
 
   CleaningSchedule({
     required this.id,
