@@ -397,14 +397,13 @@ class CleaningService {
     }
   }
 
-  static Future<void> scheduleCleaning(DateTime startDate, int days) async {
+  static Future<void> scheduleCleaning(DateTime startDate) async {
     var url = Uri.parse('$BASE_URL/cleaning_management/schedule_cleaning');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         'start_date': startDate.toIso8601String().split('T').first, // Formatting the date as 'YYYY-MM-DD'
-        'days': days,
       }),
     );
 
