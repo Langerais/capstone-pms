@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 class Room {
@@ -222,8 +223,9 @@ class CleaningSchedule {
 
 class CleaningAction {
   final int id;
-  final String name;
-  final int frequency;
+  String name;
+  int frequency;
+
 
   CleaningAction({
     required this.id,

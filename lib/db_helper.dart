@@ -397,6 +397,18 @@ class CleaningService {
     }
   }
 
+
+  static Future<CleaningAction> getCleaningAction(int actionId) async {
+    var url = Uri.parse('$BASE_URL/cleaning_management/get_cleaning_action/$actionId');
+    var response = await http.get(url);
+    print(CleaningAction.fromJson(jsonDecode(response.body)));
+    if (response.statusCode == 200) {
+      return CleaningAction.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load cleaning action');
+    }
+  }
+
   static Future<void> scheduleCleaning(DateTime startDate) async {
     var url = Uri.parse('$BASE_URL/cleaning_management/schedule_cleaning');
     var response = await http.post(
@@ -431,6 +443,46 @@ class CleaningService {
     if (response.statusCode != 200) {
       throw Exception('Failed to toggle task status. Error: ${response.body}');
     }
+  }
+
+  static Future<bool> createCleaningAction(String actionName, int frequencyDays) async {
+    final response = await http.post(
+      Uri.parse('$BASE_URL/cleaning_management/create_cleaning_action'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'action_name': actionName,
+        'frequency_days': frequencyDays,
+      }),
+    );
+    return response.statusCode == 201;
+  }
+
+  static Future<bool> updateCleaningAction(int actionId, String actionName, int frequency) async {
+    final response = await http.put(
+      Uri.parse('$BASE_URL/cleaning_management/modify_cleaning_action/$actionId'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'action_name': actionName,
+        'frequency_days': frequency,
+      }),
+    );
+
+    print("Send: " + actionId.toString() + " " + actionName.toString() + " " + frequency.toString());
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> deleteCleaningAction(int actionId) async {
+    final response = await http.delete(
+      Uri.parse('$BASE_URL/cleaning_management/remove_cleaning_action/$actionId'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+    return response.statusCode == 200;
   }
 
 }
