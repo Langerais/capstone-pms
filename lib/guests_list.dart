@@ -105,6 +105,15 @@ class _GuestsListViewState extends State<GuestsListView> {
             ),
           ],
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            // Open AI Chat
+            print('AI Chat Button Pressed');
+            // You might want to navigate to a new screen or open a dialog
+          },
+          child: Icon(Icons.chat),
+          backgroundColor: Colors.blue,
+        ),
       ),
     );
   }

@@ -5,16 +5,45 @@ import 'package:capstone_pms/drawer_menu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'create_reservation_view.dart';
 import 'dbObjects.dart';
 import 'db_helper.dart';
 import 'package:collection/collection.dart';
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
+
+
+  void _navigateAndRefresh(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateReservationScreen()),
+    );
+    // Refresh logic goes here
+    // If using a StatefulWidget, call setState to refresh the screen
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Arrivals/Departures'),
+        actions: <Widget>[
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: IconButton(
+              icon: const Icon(Icons.add, size: 50),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreateReservationView()),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -25,6 +54,15 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
         ),
       ),
       body: ArrivalsDeparturesTable(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Open AI Chat
+          print('AI Chat Button Pressed');
+          // You might want to navigate to a new screen or open a dialog
+        },
+        child: Icon(Icons.chat),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 }
@@ -65,7 +103,9 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       if (kDebugMode) {print("Guests fetched");}
 
     } catch (e) {
-      print("Error fetching data: $e");
+      if (kDebugMode) {
+        print("Error fetching data: $e");
+      }
     } finally {
       setState(() => isLoading = false);
     }
@@ -143,7 +183,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                             bottom: BorderSide(width: 1.0, color: Colors.black), // Bottom border
                           ),
                         ),
-                        child: const Center(child: Text('Room')),
+                        child: const Center(child: Text('Day → ')),
                       ),
                     ),
                     for (int i = 0; i < 7; i++)
@@ -178,7 +218,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                             bottom: BorderSide(width: 2.0, color: Colors.black), // Bottom border
                           ),
                         ),
-                        child: const Center(child: Text('Day')),
+                        child: const Center(child: Text('Room ↓ ')),
                       ),
                     ),
                     for (int i = 0; i < 7; i++)
@@ -432,14 +472,29 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
         children: <Widget>[
           Text("Reservation Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SizedBox(height: 10),
-          Text("Guest Name: ${guest.name} ${guest.surname}"),
-          Text("Email: ${guest.email}"),
-          Text("Phone: ${guest.phone}"),
+          Text("Guest Name: ${guest.name ?? 'Unknown'} ${guest.surname ?? ''}"),
+          Text("Email: ${guest.email ?? 'No email provided'}"),
+          Text("Phone: ${guest.phone ?? 'No phone number'}"),
           Text("Check-in Date: ${formatDate(reservation.startDate)}"),
           Text("Check-out Date: ${formatDate(reservation.endDate)}"),
+          Text("Status: ${reservation.status != null ? '${reservation.status[0].toUpperCase()}${reservation.status.substring(1)}' : 'No status'}"),
         ],
       ),
     );
   }
 
+}
+
+class CreateReservationScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Create New Reservation'),
+      ),
+      body: Center(
+        // Your form or UI elements to create a new reservation go here
+      ),
+    );
+  }
 }

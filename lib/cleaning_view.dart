@@ -5,6 +5,8 @@ import 'db_helper.dart';
 import 'dbObjects.dart';
 import 'package:intl/intl.dart';
 
+import 'drawer_menu.dart';
+
 // TODO: Individual refresh for each task
 
 /// A StatefulWidget for displaying and managing cleaning schedules.
@@ -69,6 +71,14 @@ class _CleaningScheduleViewState extends State<CleaningView> {
       appBar: AppBar(
         title: const Text('Cleaning Schedule'),
         actions: buildAppBarActions(),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
+          ],// Your drawer items
+        ),
       ),
       body: Column(
         children: [

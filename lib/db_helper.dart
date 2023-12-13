@@ -56,9 +56,66 @@ class ReservationService {
       throw Exception('Failed to load reservations');
     }
   }
+
+  static Future<void> addReservation({
+    //required String channelManagerId,
+    required DateTime startDate,
+    required DateTime endDate,
+    required int roomId,
+    required int guestId,
+    required double dueAmount,
+  }) async {
+    var url = Uri.parse('$BASE_URL/reservations/add_reservation');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        // 'channel_manager_id': channelManagerId,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+        'room_id': roomId,
+        'guest_id': guestId,
+        'due_amount': dueAmount,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add reservation');
+    }
+  }
+
 }
 
 class GuestService {
+
+  static Future<Guest> addGuest({
+    //required String channelManagerId,
+    required String name,
+    required String surname,
+    required String phone,
+    required String email,
+  }) async {
+    var url = Uri.parse('$BASE_URL/guests/add_guest');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        //'channel_manager_id': channelManagerId,
+        'name': name,
+        'surname': surname,
+        'phone': phone,
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      var jsonData = jsonDecode(response.body);
+      return Guest.fromJson(jsonData);
+    } else {
+      throw Exception('Failed to add guest');
+    }
+  }
+
   static Future<List<Guest>> getGuests() async {
     var url = Uri.parse('$BASE_URL/guests/get_guests');
     var response = await http.get(url);
@@ -109,6 +166,22 @@ class GuestService {
           guest.email.toLowerCase().contains(searchText.toLowerCase()) ||
           guest.phone.toLowerCase().contains(searchText.toLowerCase());
     }).toList();
+  }
+
+
+  static Future<Guest?> findGuestByEmailOrPhone(String email, String phone) async {
+    var url = Uri.parse('$BASE_URL/guests/find_guest');
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({'email': email, 'phone': phone}),
+    );
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body);
+      return jsonData != null ? Guest.fromJson(jsonData) : null;
+    } else {
+      throw Exception('Failed to find guest');
+    }
   }
 
 }

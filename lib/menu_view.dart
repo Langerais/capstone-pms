@@ -72,6 +72,15 @@ class _MenuViewState extends State<MenuView> {
           }
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Open AI Chat
+          print('AI Chat Button Pressed');
+          // You might want to navigate to a new screen or open a dialog
+        },
+        child: Icon(Icons.chat),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 }
@@ -150,8 +159,8 @@ class CategoryItemsView extends StatelessWidget {
   void _showReservationsDialog(BuildContext context, MenuItem item, List<Reservation> reservations, List<Guest> guests, List<Room> rooms) {
 
     reservations.sort((a, b) {
-      Room roomA = rooms.firstWhere((r) => r.id == a.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'ERROR'));
-      Room roomB = rooms.firstWhere((r) => r.id == b.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'ERROR'));
+      Room roomA = rooms.firstWhere((r) => r.id == a.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
+      Room roomB = rooms.firstWhere((r) => r.id == b.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
       return roomA.name.compareTo(roomB.name);
     });
 
@@ -163,8 +172,8 @@ class CategoryItemsView extends StatelessWidget {
           content: SingleChildScrollView(
             child: ListBody(
               children: reservations.map((reservation) {
-                Room room = rooms.firstWhere((r) => r.id == reservation.roomId, orElse: () => Room(id: 0, name: 'Unknown', channelManagerId: 'Unknown'));
-                Guest guest = guests.firstWhere((g) => g.id == reservation.guestId, orElse: () => Guest(id: 0, channelManagerId: 'Unknown', name: 'Unknown', surname: 'Guest', phone: 'Unknown', email: 'Unknown'));
+                Room room = rooms.firstWhere((r) => r.id == reservation.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
+                Guest guest = guests.firstWhere((g) => g.id == reservation.guestId, orElse: () => Guest(id: 0, name: 'Unknown', surname: 'Guest', phone: 'Unknown', email: 'Unknown'));
                 return ListTile(
                   title: Text('Room ${room.name}'),
                   subtitle: Text(guest.surname),
@@ -569,7 +578,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Delete ${item.name}?'),
-          content: SingleChildScrollView(
+          content: const SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text('Are you sure you want to delete this item?'),

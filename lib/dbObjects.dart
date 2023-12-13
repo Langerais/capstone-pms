@@ -4,19 +4,19 @@ import 'package:flutter/foundation.dart';
 class Room {
   final int id;
   final String name;
-  final String channelManagerId;
+  //final String channelManagerId;
 
   Room({
     required this.id,
     required this.name,
-    required this.channelManagerId
+    //required this.channelManagerId
   });
 
   factory Room.fromJson(Map<String, dynamic> json) {
     return Room(
       id: json['id'] as int,
       name: json['room_name'] as String? ?? 'Unknown Name',
-      channelManagerId: json['channel_manager_id'] as String? ?? 'Unknown Channel Manager ID',
+      //channelManagerId: json['channel_manager_id'] as String? ?? 'Unknown Channel Manager ID',
     );
   }
 }
@@ -25,21 +25,23 @@ class Room {
 
 class Reservation {
   final int id;
-  final String channelManagerId;
+  //final String channelManagerId;
   final int roomId;
   final int guestId;
   final DateTime startDate;
   final DateTime endDate;
   final double dueAmount;
+  final String status;
 
   Reservation({
     required this.id,
-    required this.channelManagerId,
+    //required this.channelManagerId,
     required this.roomId,
     required this.guestId,
     required this.startDate,
     required this.endDate,
-    required this.dueAmount
+    required this.dueAmount,
+    required this.status,
   });
 
   factory Reservation.fromJson(Map<String, dynamic> json) {
@@ -47,13 +49,13 @@ class Reservation {
 
     return Reservation(
       id: json['id'] as int,
-      channelManagerId: json['channel_manager_id'] as String,
+      //channelManagerId: json['channel_manager_id'] as String,
       roomId: json['room_id'] as int,
       guestId: json['guest_id'] as int,
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
       dueAmount: json['due_amount'] != null ? double.parse(json['due_amount']) : 0.0,
-
+      status: json['status'] as String,
     );
   }
 
@@ -95,7 +97,7 @@ int _monthToInt(String month) {
 
 class Guest {
   final int id;
-  final String channelManagerId;
+  //final String channelManagerId;
   final String name;
   final String surname;
   final String phone;
@@ -103,7 +105,7 @@ class Guest {
 
   Guest({
     required this.id,
-    required this.channelManagerId,
+    //required this.channelManagerId,
     required this.name,
     required this.surname,
     required this.phone,
@@ -113,7 +115,7 @@ class Guest {
   factory Guest.fromJson(Map<String, dynamic> json) {
     return Guest(
       id: json['id'] as int,
-      channelManagerId: json['channel_manager_id'] as String? ?? "Unknown Channel Manager ID",
+      //channelManagerId: json['channel_manager_id'] as String? ?? "Unknown Channel Manager ID",
       name: json['name'] as String? ?? "Unknown First Name",
       surname: json['surname'] as String? ?? "Unknown Last Name",
       phone: json['phone'] as String? ?? "Unknown Phone Number",

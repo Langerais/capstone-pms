@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'drawer_menu.dart';
 
 
+
 class BillingView extends StatefulWidget {
   @override
   _BillingViewState createState() => _BillingViewState();
@@ -120,6 +121,15 @@ class _BillingViewState extends State<BillingView> {
               ),
             ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            // Open AI Chat
+            print('AI Chat Button Pressed');
+            // You might want to navigate to a new screen or open a dialog
+          },
+          child: Icon(Icons.chat),
+          backgroundColor: Colors.blue,
         ),
       ),
     );

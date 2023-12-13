@@ -7,6 +7,7 @@ import 'arrivals_departures_view.dart';
 import 'guests_list.dart';
 import 'menu_view.dart';
 import 'authentication.dart';
+import 'notifications_view.dart';
 
 
 
@@ -16,20 +17,46 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
+    UserGroup userRole = Auth.getUserRole();
+
+    Widget _homePage;
+
+    switch (userRole) {
+      case UserGroup.Admin:
+        _homePage = ArrivalsDeparturesScreen();
+        break;
+      case UserGroup.Manager:
+        _homePage = ArrivalsDeparturesScreen();
+        break;
+      case UserGroup.Reception:
+        _homePage = ArrivalsDeparturesScreen();
+        break;
+      case UserGroup.Cleaning:
+        _homePage = CleaningView();
+        break;
+      case UserGroup.Bar:
+        _homePage = MenuView();
+        break;
+      default:
+        _homePage = MyHomePage();
+    }
+
     return MaterialApp(
       title: 'Hotel PMS',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: _homePage,
       routes: {
-        '/arrivals_departures': (context) => ArrivalsDeparturesScreen(), //Add route for Arrivals/Departures
-        '/guests_list': (context) => GuestsListView(), // Guests list view route
-        '/menu_view': (context) => MenuView(), // Menu view route
-        '/billing_view': (context) => BillingView(), // Billing view route
-        '/cleaning_view': (context) => CleaningView(), // Cleaning view route
+        '/arrivals_departures': (context) => ArrivalsDeparturesScreen(),
+        '/guests_list': (context) => GuestsListView(),
+        '/menu_view': (context) => MenuView(),
+        '/billing_view': (context) => BillingView(),
+        '/cleaning_view': (context) => CleaningView(),
+        '/notifications_view': (context) => NotificationsView(userGroup: userRole,),
       },
     );
   }

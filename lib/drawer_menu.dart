@@ -71,12 +71,15 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   // Notifications menu item
   drawerItems.add(
-    ListTile(
-      leading: Icon(Icons.notifications),
-      title: Text('Notifications / TBD'),
-      onTap: () {
-        // Navigate to Notifications
-      },
+    Container(
+      color: colorWIP, // Change this to your desired color
+      child: ListTile(
+        leading: Icon(Icons.home),
+        title: Text('Notifications / WIP'),
+        onTap: () {
+          Navigator.pushNamed(context, '/notifications_view'); // Navigate to Notifications
+        },
+      ),
     ),
   );
 
@@ -101,7 +104,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
         color: colorDone, // Change this to your desired color
         child: ListTile(
           leading: Icon(Icons.monetization_on),
-          title: Text('Bar Bill'),
+          title: const Text('Restaurant Payments'),
           onTap: () {
             Navigator.pushNamed(context, '/billing_view'); // Navigate to Restaurant Billing
           },
@@ -115,10 +118,10 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   if (userGroup == UserGroup.Cleaning || userGroup == UserGroup.Admin || userGroup == UserGroup.Manager) {
     drawerItems.add(
         Container(
-          color: colorWIP, // Change this to your desired color
+          color: colorDone, // Change this to your desired color
           child: ListTile(
-            leading: Icon(Icons.calendar_month),
-            title: Text('Cleaning Schedule / WIP'),
+            leading: const Icon(Icons.calendar_month),
+            title: const Text('Cleaning Schedule'),
             onTap: () {
               Navigator.pushNamed(context, '/cleaning_view'); // Navigate to Cleaning Schedule Management
             },
@@ -132,7 +135,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       ListTile(
-        leading: Icon(Icons.calendar_today),
+        leading: Icon(Icons.meeting_room),
         title: Text('Arrivals / Departures'),
         tileColor: colorDone,
         onTap: () {
@@ -144,8 +147,8 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       ListTile(
-        leading: Icon(Icons.arrow_circle_down),
-        title: Text('Check-in / TBD'),  // TODO: Move to Arrivals / Departures
+        leading: Icon(Icons.swap_vert),
+        title: Text('Check In/Out'),  // TODO: Move to Arrivals / Departures
         onTap: () {
           // Navigate to Check-in
           Navigator.pop(context);
@@ -153,15 +156,6 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
       ),
     );
 
-    drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.arrow_circle_up),
-        title: Text('Check-out  / TBD'),  // TODO: Move to Arrivals / Departures
-        onTap: () {
-          // Navigate to Check-out
-        },
-      ),
-    );
 
     drawerItems.add(
       ListTile(
@@ -179,25 +173,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   if (userGroup == UserGroup.Manager || userGroup == UserGroup.Admin) {
     // Menu items for Manager and Admin
-    drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.meeting_room),
-        title: Text('Cleaning Schedule Management / TBD'),
-        onTap: () {
-          // Navigate to Cleaning Schedule Management
-        },
-      ),
-    );
 
-    drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.notification_add),
-        title: Text('Notification Management / TBD'),
-        onTap: () {
-          // Navigate to Notification Management
-        },
-      ),
-    );
 
     drawerItems.add(
       ListTile(
@@ -228,8 +204,8 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       ListTile(
-        leading: Icon(Icons.settings),
-        title: Text('Settings / TBD'),
+        leading: const Icon(Icons.settings),
+        title: const Text('Settings / TBD'),
         onTap: () {
           // Navigate to Settings
         },
@@ -238,8 +214,8 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       ListTile(
-        leading: Icon(Icons.account_box),
-        title: Text('Profile / TBD'),
+        leading: const Icon(Icons.account_box),
+        title: const Text('Profile / TBD'),
         onTap: () {
           // Navigate to Account
         },
