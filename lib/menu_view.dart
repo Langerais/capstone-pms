@@ -159,8 +159,8 @@ class CategoryItemsView extends StatelessWidget {
   void _showReservationsDialog(BuildContext context, MenuItem item, List<Reservation> reservations, List<Guest> guests, List<Room> rooms) {
 
     reservations.sort((a, b) {
-      Room roomA = rooms.firstWhere((r) => r.id == a.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
-      Room roomB = rooms.firstWhere((r) => r.id == b.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
+      Room roomA = rooms.firstWhere((r) => r.id == a.roomId, orElse: () => Room(id: 0, name: 'Unknown', maxGuests: 0));
+      Room roomB = rooms.firstWhere((r) => r.id == b.roomId, orElse: () => Room(id: 0, name: 'Unknown', maxGuests: 0));
       return roomA.name.compareTo(roomB.name);
     });
 
@@ -172,7 +172,7 @@ class CategoryItemsView extends StatelessWidget {
           content: SingleChildScrollView(
             child: ListBody(
               children: reservations.map((reservation) {
-                Room room = rooms.firstWhere((r) => r.id == reservation.roomId, orElse: () => Room(id: 0, name: 'Unknown'));
+                Room room = rooms.firstWhere((r) => r.id == reservation.roomId, orElse: () => Room(id: 0, name: 'Unknown', maxGuests: 0));
                 Guest guest = guests.firstWhere((g) => g.id == reservation.guestId, orElse: () => Guest(id: 0, name: 'Unknown', surname: 'Guest', phone: 'Unknown', email: 'Unknown'));
                 return ListTile(
                   title: Text('Room ${room.name}'),

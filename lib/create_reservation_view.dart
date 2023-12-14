@@ -26,6 +26,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
   List<Room> availableRooms = []; // Stores available rooms for the selected date range
   Room? selectedRoom; // Currently selected room
   int? selectedGuestId; // ID of the selected guest (if existing guest is selected)
+  int maxGuestsForSelectedRoom = 0;
 
   // Selected start and end date for the reservation
   DateTime selectedStartDate = DateTime.now();
@@ -65,10 +66,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
   ///
   /// Helper function to get the error text for text fields based on their state.
   String? getErrorText(String text, bool modified, String errorMessage) {
-    if (text.isEmpty && modified) {
-      return errorMessage;
-    }
-    return null;
+    return (text.isEmpty && modified) ? errorMessage : null;
   }
 
   // Helper functions to validate email, phone, and price fields
@@ -95,7 +93,6 @@ class _CreateReservationViewState extends State<CreateReservationView> {
   @override
   void initState() {
     super.initState();
-    // Add listeners to email and phone focus nodes to check for existing guests
     emailFocusNode.addListener(() {
       if (!emailFocusNode.hasFocus) {
         checkForExistingGuest();
@@ -106,8 +103,18 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         checkForExistingGuest();
       }
     });
-    updateAvailableRooms(); // Fetch available rooms for the current date range
-    fetchAllGuests(); // Fetch all guests for existing guest selection
+
+    // Initialize the room selection and max guests
+    updateAvailableRooms().then((_) {
+      if (availableRooms.isNotEmpty) {
+        setState(() {
+          selectedRoom = availableRooms.first;
+          maxGuestsForSelectedRoom = selectedRoom?.maxGuests ?? 0;
+        });
+      }
+    });
+
+    fetchAllGuests();
   }
 
   @override
@@ -118,6 +125,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
     emailController.dispose();
     phoneController.dispose();
     pricePerNightController.dispose();
+
     emailFocusNode.dispose();
     phoneFocusNode.dispose();
     super.dispose();
@@ -126,7 +134,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
   /// updateAvailableRooms
   ///
   /// Fetches available rooms based on the selected date range and updates the state.
-  void updateAvailableRooms() async {
+  Future<void> updateAvailableRooms() async {
     // Fetch reservations for the selected date range
     List<Reservation> reservations = await ReservationService.getReservationsByDateRange(
         selectedStartDate.subtract(const Duration(days: 1)),
@@ -192,6 +200,15 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         }
         calculateTotalAmount();
         updateAvailableRooms();
+
+        updateAvailableRooms().then((_) {
+          if (availableRooms.isNotEmpty) {
+            setState(() {
+              selectedRoom = availableRooms.first;
+              maxGuestsForSelectedRoom = selectedRoom?.maxGuests ?? 0;
+            });
+          }
+        });
       });
     }
   }
@@ -350,23 +367,48 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<Room>(
-              value: selectedRoom,
-              onChanged: (Room? newValue) {
-                setState(() {
-                  selectedRoom = newValue;
-                });
-              },
-              items: availableRooms.map<DropdownMenuItem<Room>>((Room room) {
-                return DropdownMenuItem<Room>(
-                  value: room,
-                  child: Text(room.name),
-                );
-              }).toList(),
-              decoration: const InputDecoration(
-                labelText: 'Select Room',
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: availableRooms.isNotEmpty
+                      ? DropdownButtonFormField<Room>(
+                    value: selectedRoom,
+                    onChanged: (Room? newValue) {
+                      setState(() {
+                        selectedRoom = newValue;
+                        maxGuestsForSelectedRoom = newValue?.maxGuests ?? 0; // Update max guests
+                      });
+                    },
+                    items: availableRooms.map<DropdownMenuItem<Room>>((Room room) {
+                      return DropdownMenuItem<Room>(
+                        value: room,
+                        child: Text(room.name),
+                      );
+                    }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: 'Select Room',
+                    ),
+                  )
+                      : const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'No available rooms for selected dates',
+                      style: TextStyle(fontSize: 16, color: Colors.red),
+                    ),
+                  ),
+                ),
+                availableRooms.isNotEmpty
+                    ? Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Text(
+                        'Max Guests: $maxGuestsForSelectedRoom',
+                          style: TextStyle(fontSize: 16),
+                  ),
+                )
+                    : SizedBox.shrink(), // Hide the 'Max Guests' text when no rooms are available
+              ],
             ),
+
             // Date pickers for start and end dates
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -391,7 +433,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
             if (guestExistsMessage.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(guestExistsMessage, style: TextStyle(color: Colors.red)),
+                child: Text(guestExistsMessage, style: const TextStyle(color: Colors.red)),
               ),
             // Switch to toggle between new and existing guest
             Row(

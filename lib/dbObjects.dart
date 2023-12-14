@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 class Room {
   final int id;
   final String name;
+  final int maxGuests;
   //final String channelManagerId;
 
   Room({
     required this.id,
     required this.name,
+    required this.maxGuests,
     //required this.channelManagerId
   });
 
@@ -16,6 +18,7 @@ class Room {
     return Room(
       id: json['id'] as int,
       name: json['room_name'] as String? ?? 'Unknown Name',
+      maxGuests: json['max_guests'] as int? ?? 2,
       //channelManagerId: json['channel_manager_id'] as String? ?? 'Unknown Channel Manager ID',
     );
   }

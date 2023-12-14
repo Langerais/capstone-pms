@@ -65,15 +65,15 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
           print('AI Chat Button Pressed');
           // You might want to navigate to a new screen or open a dialog
         },
-        child: Icon(Icons.chat),
         backgroundColor: Colors.blue,
+        child: Icon(Icons.chat),
       ),
     );
   }
 }
 
 class ArrivalsDeparturesTable extends StatefulWidget {
-  ArrivalsDeparturesTable({Key? key}) : super(key: key);
+  const ArrivalsDeparturesTable({Key? key}) : super(key: key);
 
   @override
   _ArrivalsDeparturesTableState createState() => _ArrivalsDeparturesTableState();
@@ -458,25 +458,19 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   Future<String> getLeavingGuest(int roomId, DateTime date) async {
     List<Reservation> todaysReservations =  await ReservationService.getReservationsByRoomAndDateRange(date, date, roomId);
 
-    //print('Room $roomId, Date $date, Reservations: ${todaysReservations.length}');
 
     String leavingGuest = '';
     String arrivingGuest = '';
 
     for (var reservation in todaysReservations) {
-      //print('Reservation: ${reservation.id}');
-      //print('Start date: ${reservation.startDate}, End date: ${reservation.endDate} || Date: $date || Is same: ${reservation.endDate.isAtSameMomentAs(date)}');
       if (isSameDate(reservation.endDate, date)) {
         leavingGuest = await getGuestSurname(reservation.guestId);
-        print('Leaving guest: $leavingGuest');
       }
       if (isSameDate(reservation.startDate, date)) {
-        print('Arriving guest: $arrivingGuest');
         arrivingGuest = await getGuestSurname(reservation.guestId);
       }
     }
 
-    print('Leaving guest: ${leavingGuest}, Arriving guest: ${arrivingGuest}');
 
     if (leavingGuest.isNotEmpty && arrivingGuest.isNotEmpty) {
       return '$leavingGuest / $arrivingGuest';
@@ -493,16 +487,16 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
   Widget buildReservationDetailsModal(Reservation reservation, Guest guest) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text("Reservation Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text("Guest Name: ${guest.name ?? 'Unknown'} ${guest.surname ?? ''}"),
-          Text("Email: ${guest.email ?? 'No email provided'}"),
-          Text("Phone: ${guest.phone ?? 'No phone number'}"),
+          const Text("Reservation Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text("Guest Name: ${guest.name} ${guest.surname ?? ''}"),
+          Text("Email: ${guest.email}"),
+          Text("Phone: ${guest.phone}"),
           Text("Check-in Date: ${formatDate(reservation.startDate)}"),
           Text("Check-out Date: ${formatDate(reservation.endDate)}"),
           Text("Status: ${reservation.status != null ? '${reservation.status[0].toUpperCase()}${reservation.status.substring(1)}' : 'No status'}"),
@@ -515,18 +509,4 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
 bool isSameDate(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
-}
-
-class CreateReservationScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Create New Reservation'),
-      ),
-      body: Center(
-        // Your form or UI elements to create a new reservation go here
-      ),
-    );
-  }
 }
