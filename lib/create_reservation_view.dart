@@ -99,9 +99,17 @@ class _CreateReservationViewState extends State<CreateReservationView> {
 
   @override
   void dispose() {
+    // Dispose text editing controllers
+    nameController.dispose();
+    surnameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    pricePerNightController.dispose();
+
     // Dispose focus nodes
     emailFocusNode.dispose();
     phoneFocusNode.dispose();
+
     super.dispose();
   }
 
@@ -213,6 +221,26 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         } else {
           actualGuestId =
           selectedGuestId!; // Use the existing non-null guest ID
+        }
+
+
+        // Check if room is available for the selected date range (Whether no other reservations appeared for the room and date range while the user was creating the reservation)
+        List<Reservation> checkReservations = await ReservationService.getReservationsByRoomAndDateRange(selectedStartDate, selectedEndDate, selectedRoom!.id);
+        if(checkReservations.isNotEmpty) {
+
+          Fluttertoast.showToast(
+              msg: "Room is not available for the selected date range",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+
+          Navigator.pop(context); // Navigate back to previous screen
+
+          throw Exception("Room is not available for the selected date range");
         }
 
         await ReservationService.addReservation(
