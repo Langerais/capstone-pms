@@ -248,7 +248,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(), // Disable ListView scrolling
-            itemCount: rooms.length, // Assuming you have a list of rooms
+            itemCount: rooms.length,
             itemBuilder: (BuildContext context, int index) {
               Room room = rooms[index];
 

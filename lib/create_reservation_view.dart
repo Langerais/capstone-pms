@@ -192,46 +192,51 @@ class _CreateReservationViewState extends State<CreateReservationView> {
     try {
       // Validate all fields before proceeding
       if (selectedRoom == null) throw Exception("Room is not selected");
-      if (selectedGuestId == null && (nameController.text.isEmpty || surnameController.text.isEmpty || emailController.text.isEmpty || phoneController.text.isEmpty)) {
+      if (selectedGuestId == null && (nameController.text.isEmpty || surnameController.text.isEmpty || emailController.text.isEmpty || phoneController.text.isEmpty || pricePerNightController.text.isEmpty)) {
         throw Exception("Guest details are incomplete");
       }
-      double dueAmount = double.tryParse(pricePerNightController.text) ?? 0;
-      if (dueAmount <= 0) throw Exception("Invalid price per night");
 
-      int actualGuestId; // Local variable to hold the non-nullable guest ID
+      if(guestExistsMessage == '') {
+        double dueAmount = double.tryParse(pricePerNightController.text) ?? 0;
+        if (dueAmount <= 0) throw Exception("Invalid price per night");
 
-      if (selectedGuestId == null) {
-        Guest newGuest = await GuestService.addGuest(
-          name: nameController.text,
-          surname: surnameController.text,
-          phone: phoneController.text,
-          email: emailController.text,
+        int actualGuestId; // Local variable to hold the non-nullable guest ID
+
+        if (selectedGuestId == null) {
+          Guest newGuest = await GuestService.addGuest(
+            name: nameController.text,
+            surname: surnameController.text,
+            phone: phoneController.text,
+            email: emailController.text,
+          );
+          actualGuestId = newGuest.id; // Use the new guest's ID
+        } else {
+          actualGuestId =
+          selectedGuestId!; // Use the existing non-null guest ID
+        }
+
+        await ReservationService.addReservation(
+          startDate: selectedStartDate,
+          endDate: selectedEndDate,
+          roomId: selectedRoom!.id,
+          guestId: actualGuestId,
+          dueAmount: dueAmount,
         );
-        actualGuestId = newGuest.id; // Use the new guest's ID
+
+        Fluttertoast.showToast(
+            msg: "Reservation Created Successfully",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+            fontSize: 16.0
+        );
+
+        Navigator.pop(context); // Navigate back to previous screen
       } else {
-        actualGuestId = selectedGuestId!; // Use the existing non-null guest ID
+
       }
-
-      await ReservationService.addReservation(
-        startDate: selectedStartDate,
-        endDate: selectedEndDate,
-        roomId: selectedRoom!.id,
-        guestId: actualGuestId,
-        dueAmount: dueAmount,
-      );
-
-      Fluttertoast.showToast(
-          msg: "Reservation Created Successfully",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );
-
-      Navigator.pop(context); // Navigate back to previous screen
-
       // Show success message or navigate to another screen
     } catch (e) {
       // Show error message
@@ -340,17 +345,32 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(guestExistsMessage, style: TextStyle(color: Colors.red)),
               ),
-            SwitchListTile(
-              title: Text(isExistingGuest ? 'Existing Guest' : 'New Guest'),
-              value: isExistingGuest,
-              onChanged: (bool value) {
-                setState(() {
-                  isExistingGuest = value;
-                  if (!value) {
-                    selectedGuestId = null; // Clear selection when switching to 'New Guest'
-                  }
-                });
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 16.0),
+                    child: Text('New Guest', textAlign: TextAlign.right),
+                  ),
+                ),
+                Switch(
+                  value: isExistingGuest,
+                  onChanged: (bool value) {
+                    setState(() {
+                      isExistingGuest = value;
+                    });
+                  },
+                ),
+                const Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 16.0),
+                    child: Text('Existing Guest', textAlign: TextAlign.left),
+                  ),
+                ),
+              ],
             ),
 
             if (isExistingGuest) ...[
@@ -481,22 +501,13 @@ class _CreateReservationViewState extends State<CreateReservationView> {
             SizedBox(height: 20),
             Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: addReservation,
-                  child: Text('Add Reservation'),
-                ),
-                ElevatedButton(
-                  onPressed: cancelReservation,
-                  child: Text('Cancel'),
-                  style: ElevatedButton.styleFrom(primary: Colors.red),
-                ),
-              ],
-            ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addReservation,
+        child: Icon(Icons.save),
+        backgroundColor: Colors.blue,
       ),
     );
   }
