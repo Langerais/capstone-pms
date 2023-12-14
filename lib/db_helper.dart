@@ -57,6 +57,24 @@ class ReservationService {
     }
   }
 
+  static Future<List<Reservation>> getReservationsByRoomAndDateRange(DateTime startDate, DateTime endDate, int roomId) async {
+    var url = Uri.parse('$BASE_URL/reservations/get_reservations_by_room_and_date_range')
+        .replace(queryParameters: {
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+      'room_id': roomId.toString(),
+    });
+
+    var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body) as List;
+      return jsonData.map((json) => Reservation.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load reservations');
+    }
+  }
+
   static Future<void> addReservation({
     //required String channelManagerId,
     required DateTime startDate,

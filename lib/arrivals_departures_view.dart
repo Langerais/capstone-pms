@@ -314,23 +314,39 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     );
   }
 
-  void onCellTap(int roomId, DateTime date) {
-    // Find the reservation for this room and date
-    Reservation? reservation = reservations.firstWhereOrNull(
-          (r) => r.roomId == roomId &&
-          date.isAfter(r.startDate.subtract(const Duration(days: 1))) &&
-          date.isBefore(r.endDate.add(const Duration(days: 1))),
-    );
+  // Show reservation details when tapping on a cell / If there are multiple reservations for the same room on the same day, find the one that is arriving today
+  Future<void> onCellTap(int roomId, DateTime date) async {
+    List<Reservation> relevantReservations = await ReservationService.getReservationsByRoomAndDateRange(date, date, roomId);
 
-    if (reservation != null) {
+    Reservation? arrivingReservation;
+
+    if (relevantReservations.isNotEmpty) {
+      // If there are multiple reservations for the same room on the same day, find the one that is arriving today
+
+      if(relevantReservations.length > 1){
+        for (var reservation in relevantReservations) {
+          if (isSameDate(date, reservation.startDate)) {
+            arrivingReservation = reservation;
+            break;
+          }
+        }
+      } else {
+        // If there is only one reservation for the room on the selected date, use it
+        arrivingReservation = relevantReservations[0];
+      }
+
+    }
+
+
+    if (arrivingReservation != null) {
       // Find the guest details
-      Guest? guest = guests.firstWhereOrNull((g) => g.id == reservation.guestId);
+      Guest? guest = guests.firstWhereOrNull((g) => g.id == arrivingReservation!.guestId);
 
       if (guest != null) {
         showModalBottomSheet(
           context: context,
           builder: (BuildContext context) {
-            return buildReservationDetailsModal(reservation, guest);
+            return buildReservationDetailsModal(arrivingReservation!, guest);
           },
         );
       }
@@ -353,27 +369,18 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   Color? getCellColor(int roomId, DateTime date) {
-    DateTime yesterday = date.subtract(Duration(days: 1));
-    DateTime tomorrow = date.add(Duration(days: 1));
-
-    List<Reservation> yesterdayReservations = reservations
-        .where((res) => res.roomId == roomId && yesterday.isAfter(res.startDate) && yesterday.isBefore(res.endDate.add(Duration(days: 1))))
-        .toList();
 
     List<Reservation> todayReservations = reservations
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
+        .where((res) => res.roomId == roomId && res.startDate.isBefore(date) && res.endDate.isAfter(date.subtract(Duration(days: 1))))
         .toList();
 
-    List<Reservation> tomorrowReservations = reservations
-        .where((res) => res.roomId == roomId && tomorrow.isAfter(res.startDate) && tomorrow.isBefore(res.endDate.add(Duration(days: 1))))
-        .toList();
 
     if (todayReservations.isNotEmpty) {
       // Check for changes in reservations (check-in, check-out, stay, or change of guest)
-      if (yesterdayReservations.isEmpty) {
-        return Colors.lightBlueAccent; // Guest is arriving today, use light green
-      } else if (tomorrowReservations.isNotEmpty && todayReservations[0].id != tomorrowReservations[0].id) {
+      if (todayReservations.length > 1) {
         return Colors.blueAccent; // Guest is changing today, use green
+      } else if (isSameDate(todayReservations[0].startDate, date)) {
+        return Colors.lightBlueAccent; // Guest is arriving today, use light green
       } else {
         return Colors.lightBlue[200]; // Guest is in room, use light green
       }
@@ -439,27 +446,38 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
 
   Future<String> getLeavingGuest(int roomId, DateTime date) async {
-    List<Reservation> leavingReservations = reservations
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
-        .toList();
+    List<Reservation> todaysReservations =  await ReservationService.getReservationsByRoomAndDateRange(date, date, roomId);
 
-    if (leavingReservations.isNotEmpty) {
-      Reservation leavingReservation = leavingReservations[0];
-      DateTime nextDay = date.add(Duration(days: 1));
+    //print('Room $roomId, Date $date, Reservations: ${todaysReservations.length}');
 
-      List<Reservation> nextDayReservations = reservations
-          .where((res) => res.roomId == roomId && nextDay.isAfter(res.startDate) && nextDay.isBefore(res.endDate))
-          .toList();
+    String leavingGuest = '';
+    String arrivingGuest = '';
 
-      if (nextDayReservations.isNotEmpty && leavingReservation.id != nextDayReservations[0].id) {
-        // Different reservation IDs on adjacent days, both guests are involved
-        return '${await getGuestSurname(leavingReservation.guestId)} / ${await getGuestSurname(nextDayReservations[0].guestId)}';
-      } else {
-        // Same reservation ID on adjacent days, returning only the leaving guest
-        return await getGuestSurname(leavingReservation.guestId);
+    for (var reservation in todaysReservations) {
+      //print('Reservation: ${reservation.id}');
+      //print('Start date: ${reservation.startDate}, End date: ${reservation.endDate} || Date: $date || Is same: ${reservation.endDate.isAtSameMomentAs(date)}');
+      if (isSameDate(reservation.endDate, date)) {
+        leavingGuest = await getGuestSurname(reservation.guestId);
+        print('Leaving guest: $leavingGuest');
       }
+      if (isSameDate(reservation.startDate, date)) {
+        print('Arriving guest: $arrivingGuest');
+        arrivingGuest = await getGuestSurname(reservation.guestId);
+      }
+    }
+
+    print('Leaving guest: ${leavingGuest}, Arriving guest: ${arrivingGuest}');
+
+    if (leavingGuest.isNotEmpty && arrivingGuest.isNotEmpty) {
+      return '$leavingGuest / $arrivingGuest';
+    } else if (leavingGuest.isNotEmpty) {
+      return leavingGuest;
+    } else if (arrivingGuest.isNotEmpty) {
+      return arrivingGuest;
+    } else if (todaysReservations.isNotEmpty) {
+      return getGuestSurname(todaysReservations[0].guestId); // No leaving or arriving guest
     } else {
-      return ''; // No leaving guest
+      return ''; // Room available
     }
   }
 
@@ -483,6 +501,10 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     );
   }
 
+}
+
+bool isSameDate(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
 class CreateReservationScreen extends StatelessWidget {
