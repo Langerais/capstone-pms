@@ -10,16 +10,26 @@ import 'dbObjects.dart';
 import 'db_helper.dart';
 import 'package:collection/collection.dart';
 
+
+
 class ArrivalsDeparturesScreen extends StatelessWidget {
 
+  final GlobalKey<_ArrivalsDeparturesTableState> _tableKey = GlobalKey();
+
+  ArrivalsDeparturesScreen({super.key});
 
   void _navigateAndRefresh(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CreateReservationScreen()),
+      MaterialPageRoute(
+        builder: (context) => CreateReservationView(
+          onReservationCreated: () {
+            // No need to call fetchData here
+          },
+        ),
+      ),
     );
-    // Refresh logic goes here
-    // If using a StatefulWidget, call setState to refresh the screen
+    _tableKey.currentState?.fetchData();
   }
 
 
@@ -35,12 +45,7 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
             height: 60,
             child: IconButton(
               icon: const Icon(Icons.add, size: 50),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreateReservationView()),
-                );
-              },
+              onPressed: () => _navigateAndRefresh(context),
             ),
           ),
         ],
@@ -53,8 +58,8 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: ArrivalsDeparturesTable(),
-      floatingActionButton: FloatingActionButton(
+      body: ArrivalsDeparturesTable(key: _tableKey),
+    floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Open AI Chat
           print('AI Chat Button Pressed');
@@ -68,8 +73,11 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
 }
 
 class ArrivalsDeparturesTable extends StatefulWidget {
+  ArrivalsDeparturesTable({Key? key}) : super(key: key);
+
   @override
   _ArrivalsDeparturesTableState createState() => _ArrivalsDeparturesTableState();
+
 }
 
 class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
@@ -114,10 +122,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   @override
   Widget build(BuildContext context) {
 
+
     if (isLoading) {
       //fetchReservations();
       return const Center(child: CircularProgressIndicator());
     }
+
     return VisibilityDetector(
       key: const Key('arrivals-departures-key'), // Unique key for VisibilityDetector
       onVisibilityChanged: (VisibilityInfo info) {

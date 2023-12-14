@@ -6,6 +6,10 @@ import 'dbObjects.dart';
 import 'db_helper.dart';
 
 class CreateReservationView extends StatefulWidget {
+  final Function() onReservationCreated;
+
+  CreateReservationView({required this.onReservationCreated});
+
   @override
   _CreateReservationViewState createState() => _CreateReservationViewState();
 }
@@ -238,6 +242,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
               fontSize: 16.0
           );
 
+          widget.onReservationCreated();
           Navigator.pop(context); // Navigate back to previous screen
 
           throw Exception("Room is not available for the selected date range");
@@ -261,6 +266,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
             fontSize: 16.0
         );
 
+        widget.onReservationCreated();
         Navigator.pop(context); // Navigate back to previous screen
       } else {
 
@@ -403,6 +409,32 @@ class _CreateReservationViewState extends State<CreateReservationView> {
 
             if (isExistingGuest) ...[
               TextField(
+                controller: pricePerNightController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and '.'
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Price per Night',
+                  errorText: pricePerNightController.text.isNotEmpty
+                      ? (isPriceValid(pricePerNightController.text) ? null : 'Enter a valid price')
+                      : getErrorText(pricePerNightController.text, priceModified, 'Price per night is required'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    priceModified = true;
+                    calculateTotalAmount();
+                    if(pricePerNightController.text.isEmpty) {
+                      totalDueAmount = 0.0;
+                    }
+                  }
+                  );
+                },
+              ),
+              SizedBox(height: 20),
+              Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
+              SizedBox(height: 20),
+              TextField(
                 onChanged: searchGuests,
                 decoration: InputDecoration(
                   labelText: 'Search Guests',
@@ -501,34 +533,35 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                   });
                 },
               ),
+              TextField(
+                controller: pricePerNightController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and '.'
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Price per Night',
+                  errorText: pricePerNightController.text.isNotEmpty
+                      ? (isPriceValid(pricePerNightController.text) ? null : 'Enter a valid price')
+                      : getErrorText(pricePerNightController.text, priceModified, 'Price per night is required'),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    priceModified = true;
+                    calculateTotalAmount();
+                    if(pricePerNightController.text.isEmpty) {
+                      totalDueAmount = 0.0;
+                    }
+                  }
+                  );
+                },
+              ),
+              SizedBox(height: 20),
+              Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
+              SizedBox(height: 20),
             ],
             // Price per Night TextField
-            TextField(
-              controller: pricePerNightController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and '.'
-              ],
-              decoration: InputDecoration(
-                labelText: 'Price per Night',
-                errorText: pricePerNightController.text.isNotEmpty
-                    ? (isPriceValid(pricePerNightController.text) ? null : 'Enter a valid price')
-                    : getErrorText(pricePerNightController.text, priceModified, 'Price per night is required'),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  priceModified = true;
-                  calculateTotalAmount();
-                  if(pricePerNightController.text.isEmpty) {
-                    totalDueAmount = 0.0;
-                  }
-                }
-                );
-              },
-            ),
-            SizedBox(height: 20),
-            Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
-            SizedBox(height: 20),
+
           ],
         ),
       ),
