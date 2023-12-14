@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -5,6 +6,13 @@ import 'package:intl/intl.dart';
 import 'dbObjects.dart';
 import 'db_helper.dart';
 
+
+/// CreateReservationView
+///
+/// This class is a StatefulWidget that manages the view for creating a new reservation.
+/// It allows users to select a room, guest details, and reservation dates. It also handles
+/// the logic for calculating the total due amount based on the price per night and date range.
+///
 class CreateReservationView extends StatefulWidget {
   final Function() onReservationCreated;
 
@@ -15,39 +23,47 @@ class CreateReservationView extends StatefulWidget {
 }
 
 class _CreateReservationViewState extends State<CreateReservationView> {
-  List<Room> availableRooms = [];
-  Room? selectedRoom;
-  int? selectedGuestId;
+  List<Room> availableRooms = []; // Stores available rooms for the selected date range
+  Room? selectedRoom; // Currently selected room
+  int? selectedGuestId; // ID of the selected guest (if existing guest is selected)
 
+  // Selected start and end date for the reservation
   DateTime selectedStartDate = DateTime.now();
-  DateTime selectedEndDate = DateTime.now().add(Duration(days: 1));
+  DateTime selectedEndDate = DateTime.now().add(const Duration(days: 1));
 
+  // TextEditingControllers for handling form inputs
   TextEditingController nameController = TextEditingController();
   TextEditingController surnameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController pricePerNightController = TextEditingController();
 
+  // FocusNodes for handling focus of email and phone input fields
   FocusNode emailFocusNode = FocusNode();
   FocusNode phoneFocusNode = FocusNode();
 
-  double totalDueAmount = 0.0;
+  double totalDueAmount = 0.0; // Calculated total amount due for the reservation
 
+  // Flags to indicate if the respective fields have been modified
   bool nameModified = false;
   bool surnameModified = false;
   bool emailModified = false;
   bool phoneModified = false;
   bool priceModified = false;
 
+  // Variables to store the last checked email and phone for existing guest check
   String lastCheckedEmail = '';
   String lastCheckedPhone = '';
 
-  String guestExistsMessage = '';
+  String guestExistsMessage = ''; // Message displayed if an existing guest is found
 
-  bool isExistingGuest = false;
-  List<Guest> guests = [];
-  String searchQuery = '';
+  bool isExistingGuest = false; // Flag to indicate if an existing guest is selected
+  List<Guest> guests = []; // Stores the list of guests for existing guest selection
+  String searchQuery = ''; // Stores the query for searching guests
 
+  /// getErrorText
+  ///
+  /// Helper function to get the error text for text fields based on their state.
   String? getErrorText(String text, bool modified, String errorMessage) {
     if (text.isEmpty && modified) {
       return errorMessage;
@@ -55,18 +71,18 @@ class _CreateReservationViewState extends State<CreateReservationView> {
     return null;
   }
 
+  // Helper functions to validate email, phone, and price fields
   bool isEmailValid(String email) {
     if (email.isEmpty) return true;
-    Pattern pattern =
-        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-    RegExp regex = new RegExp(pattern as String);
+    Pattern pattern = r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+    RegExp regex = RegExp(pattern as String);
     return regex.hasMatch(email);
   }
 
   bool isPhoneValid(String phone) {
     if (phone.isEmpty) return true;
     Pattern pattern = r'^[0-9+]+$';
-    RegExp regex = new RegExp(pattern as String);
+    RegExp regex = RegExp(pattern as String);
     return regex.hasMatch(phone);
   }
 
@@ -76,10 +92,10 @@ class _CreateReservationViewState extends State<CreateReservationView> {
     return priceVal != null && priceVal > 0;
   }
 
-
   @override
   void initState() {
     super.initState();
+    // Add listeners to email and phone focus nodes to check for existing guests
     emailFocusNode.addListener(() {
       if (!emailFocusNode.hasFocus) {
         checkForExistingGuest();
@@ -90,58 +106,53 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         checkForExistingGuest();
       }
     });
-    updateAvailableRooms();
-    fetchAllGuests();
-  }
-
-  void onFieldFocusChange() {
-    if (!emailFocusNode.hasFocus || !phoneFocusNode.hasFocus) {
-      // Call the function to check for existing guest when focus is lost
-      checkForExistingGuest();
-    }
+    updateAvailableRooms(); // Fetch available rooms for the current date range
+    fetchAllGuests(); // Fetch all guests for existing guest selection
   }
 
   @override
   void dispose() {
-    // Dispose text editing controllers
+    // Dispose controllers and focus nodes to free up resources
     nameController.dispose();
     surnameController.dispose();
     emailController.dispose();
     phoneController.dispose();
     pricePerNightController.dispose();
-
-    // Dispose focus nodes
     emailFocusNode.dispose();
     phoneFocusNode.dispose();
-
     super.dispose();
   }
 
+  /// updateAvailableRooms
+  ///
+  /// Fetches available rooms based on the selected date range and updates the state.
   void updateAvailableRooms() async {
+    // Fetch reservations for the selected date range
     List<Reservation> reservations = await ReservationService.getReservationsByDateRange(
-        selectedStartDate.subtract(Duration(days: 1)),
-        selectedEndDate.add(Duration(days: 1))
+        selectedStartDate.subtract(const Duration(days: 1)),
+        selectedEndDate.add(const Duration(days: 1))
     );
 
+    // Fetch all rooms
     List<Room> allRooms = await RoomService.getRooms();
 
+    // Determine unavailable rooms based on existing reservations
     Set<int> unavailableRoomIds = reservations.where((reservation) {
-      // A room is unavailable if the existing reservation overlaps with the selected date range,
-      // excluding cases where an existing reservation ends on the selected start date
-      // or starts on the selected end date.
       return !(reservation.endDate.isAtSameMomentAs(selectedStartDate) ||
           reservation.startDate.isAtSameMomentAs(selectedEndDate)) &&
           ((reservation.startDate.isBefore(selectedEndDate) && reservation.endDate.isAfter(selectedStartDate)));
     }).map((reservation) => reservation.roomId).toSet();
 
+    // Update the state with available rooms and reset selected room
     setState(() {
       availableRooms = allRooms.where((room) => !unavailableRoomIds.contains(room.id)).toList();
       selectedRoom = availableRooms.isNotEmpty ? availableRooms.first : null;
     });
   }
 
-
-
+  /// calculateTotalAmount
+  ///
+  /// Calculates the total amount due for the reservation based on price per night and date range.
   void calculateTotalAmount() {
     try {
       double pricePerNight = double.parse(pricePerNightController.text);
@@ -150,14 +161,17 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         totalDueAmount = pricePerNight * numberOfNights;
       });
     } catch (e) {
-      // Handle parsing error
+      Exception('Failed to calculate total amount: $e');
     }
   }
 
+  /// _selectDate
+  ///
+  /// Opens a date picker to select either the start or end date of the reservation.
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    DateTime firstDate = isStartDate ? DateTime.now() : selectedStartDate.add(Duration(days: 1));
+    DateTime firstDate = isStartDate ? DateTime.now() : selectedStartDate.add(const Duration(days: 1));
     DateTime initialDate = isStartDate ? selectedStartDate : selectedEndDate.isBefore(firstDate) ? firstDate : selectedEndDate;
-    DateTime lastDate = DateTime.now().add(Duration(days: 365));
+    DateTime lastDate = DateTime.now().add(const Duration(days: 365 * 2));
 
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -170,29 +184,33 @@ class _CreateReservationViewState extends State<CreateReservationView> {
       setState(() {
         if (isStartDate) {
           selectedStartDate = picked;
-          // Adjust end date if it's before the new start date
-          if (selectedEndDate.isBefore(selectedStartDate.add(Duration(days: 1)))) {
-            selectedEndDate = selectedStartDate.add(Duration(days: 1));
+          if (selectedEndDate.isBefore(selectedStartDate.add(const Duration(days: 1)))) {
+            selectedEndDate = selectedStartDate.add(const Duration(days: 1));
           }
         } else {
           selectedEndDate = picked;
         }
         calculateTotalAmount();
-        updateAvailableRooms(); // Update available rooms based on the new date range
+        updateAvailableRooms();
       });
     }
   }
 
-
+  /// fetchAllGuests
+  ///
+  /// Fetches all guests for the existing guest selection functionality.
   void fetchAllGuests() async {
     try {
       guests = await GuestService.getGuests();
       setState(() {});
     } catch (e) {
-      // Handle exception
+      Exception('Failed to fetch guests: $e');
     }
   }
 
+  /// searchGuests
+  ///
+  /// Handles the search functionality for existing guests.
   void searchGuests(String query) {
     setState(() {
       searchQuery = query;
@@ -200,33 +218,35 @@ class _CreateReservationViewState extends State<CreateReservationView> {
   }
 
 
+
+  /// addReservation
+  ///
+  /// Adds a new reservation based on the form inputs.
   void addReservation() async {
     try {
-      // Validate all fields before proceeding
+      // Validation logic before adding a reservation
       if (selectedRoom == null) throw Exception("Room is not selected");
       if (selectedGuestId == null && (nameController.text.isEmpty || surnameController.text.isEmpty || emailController.text.isEmpty || phoneController.text.isEmpty || pricePerNightController.text.isEmpty)) {
         throw Exception("Guest details are incomplete");
       }
 
-      if(guestExistsMessage == '') {
+      if (guestExistsMessage == '') {
         double dueAmount = double.tryParse(pricePerNightController.text) ?? 0;
         if (dueAmount <= 0) throw Exception("Invalid price per night");
 
-        int actualGuestId; // Local variable to hold the non-nullable guest ID
-
+        int actualGuestId;
         if (selectedGuestId == null) {
+          // Add a new guest if not an existing one
           Guest newGuest = await GuestService.addGuest(
             name: nameController.text,
             surname: surnameController.text,
             phone: phoneController.text,
             email: emailController.text,
           );
-          actualGuestId = newGuest.id; // Use the new guest's ID
+          actualGuestId = newGuest.id;
         } else {
-          actualGuestId =
-          selectedGuestId!; // Use the existing non-null guest ID
+          actualGuestId = selectedGuestId!;
         }
-
 
         // Check if room is available for the selected date range (Whether no other reservations appeared for the room and date range while the user was creating the reservation)
         List<Reservation> checkReservations = await ReservationService.getReservationsByRoomAndDateRange(selectedStartDate, selectedEndDate, selectedRoom!.id);
@@ -274,7 +294,9 @@ class _CreateReservationViewState extends State<CreateReservationView> {
       // Show success message or navigate to another screen
     } catch (e) {
       // Show error message
-      print("Error adding reservation: ${e.toString()}");
+      if (kDebugMode) {
+        print("Error adding reservation: ${e.toString()}");
+      }
     }
   }
 
@@ -282,15 +304,9 @@ class _CreateReservationViewState extends State<CreateReservationView> {
     Navigator.of(context).pop(); // Closes the current view
   }
 
-  void pickGuest() {
-    // Navigate to view for picking an existing guest
-    // Implement logic to handle guest selection
-  }
-
-
-
+  /// Checks if a guest already exists with the entered email or phone.
+  /// Sets the `guestExistsMessage` state variable accordingly.
   void checkForExistingGuest() async {
-
     String currentEmail = emailController.text;
     String currentPhone = phoneController.text;
 
@@ -305,8 +321,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         if (existingGuest != null) {
           setState(() {
             guestExistsMessage =
-            'Guest already exists: ${existingGuest.name} ${existingGuest
-                .surname};\nPlease select guest from "Existing Guest" list';
+            'Guest already exists: ${existingGuest.name} ${existingGuest.surname};\nPlease select guest from "Existing Guest" list';
           });
         } else {
           setState(() {
@@ -317,20 +332,18 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         setState(() {
           guestExistsMessage = ''; // Clear the message in case of an exception
         });
-        // You might want to handle this exception differently, e.g., logging
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     List<Guest> filteredGuests = GuestService.filterGuests(searchQuery, guests);
 
-
+    // Main build method of the widget, defining the layout and functionality of the UI.
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Reservation'),
+        title: const Text('Create Reservation'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -350,24 +363,25 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                   child: Text(room.name),
                 );
               }).toList(),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Select Room',
               ),
             ),
+            // Date pickers for start and end dates
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Expanded(
                   child: ListTile(
                     title: Text("Start Date: ${DateFormat('yyyy-MM-dd').format(selectedStartDate)}"),
-                    trailing: Icon(Icons.calendar_today),
+                    trailing: const Icon(Icons.calendar_today),
                     onTap: () => _selectDate(context, true),
                   ),
                 ),
                 Expanded(
                   child: ListTile(
                     title: Text("End Date: ${DateFormat('yyyy-MM-dd').format(selectedEndDate)}"),
-                    trailing: Icon(Icons.calendar_today),
+                    trailing: const Icon(Icons.calendar_today),
                     onTap: () => _selectDate(context, false),
                   ),
                 ),
@@ -379,6 +393,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(guestExistsMessage, style: TextStyle(color: Colors.red)),
               ),
+            // Switch to toggle between new and existing guest
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -406,11 +421,11 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                 ),
               ],
             ),
-
+            // Fields and list for handling new or existing guest details
             if (isExistingGuest) ...[
               TextField(
                 controller: pricePerNightController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and '.'
                 ],
@@ -431,12 +446,12 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                   );
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 onChanged: searchGuests,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Search Guests',
                   suffixIcon: Icon(Icons.search),
                 ),
@@ -535,7 +550,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
               ),
               TextField(
                 controller: pricePerNightController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and '.'
                 ],
@@ -556,19 +571,20 @@ class _CreateReservationViewState extends State<CreateReservationView> {
                   );
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text('Total Due Amount: €${totalDueAmount.toStringAsFixed(2)}'),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
             ],
             // Price per Night TextField
 
           ],
         ),
       ),
+      // Floating action button for saving the reservation
       floatingActionButton: FloatingActionButton(
         onPressed: addReservation,
-        child: Icon(Icons.save),
         backgroundColor: Colors.blue,
+        child: Icon(Icons.save),
       ),
     );
   }
