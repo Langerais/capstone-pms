@@ -10,7 +10,7 @@ import 'dbObjects.dart';
 import 'db_helper.dart';
 import 'package:collection/collection.dart';
 
-
+// TODO: Add a Date Picker to select the week
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
 
@@ -24,7 +24,7 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => CreateReservationView(
           onReservationCreated: () {
-            // No need to call fetchData here
+
           },
         ),
       ),
@@ -119,14 +119,18 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     }
   }
 
+  DateTime getMondayOfSelectedWeek(DateTime date) {
+    DateTime weekStart = date.subtract(Duration(days: date.weekday - 1));
+    weekStart = weekStart.add(const Duration(seconds: 1)); // Needed to avoid cells coloring bug
+    return weekStart;
+  }
+
+
   @override
   Widget build(BuildContext context) {
 
 
-    if (isLoading) {
-      //fetchReservations();
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (isLoading) { return const Center(child: CircularProgressIndicator()); }
 
     return VisibilityDetector(
       key: const Key('arrivals-departures-key'), // Unique key for VisibilityDetector
@@ -154,6 +158,23 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                   });
                 },
               ),
+              IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: currentWeekStart,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      currentWeekStart = getMondayOfSelectedWeek(picked);
+                      fetchData();
+                    });
+                  }
+                },
+              ),
               Text('Week of ${formatDate(currentWeekStart)}'),
               IconButton(
                 icon: const Icon(Icons.arrow_forward),
@@ -169,13 +190,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                   setState(() {
                     currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
                     fetchData();
+                    print("TODAY: " + currentWeekStart.toString());
                   });
                 },
                 child: const Text('TODAY'),
               ),
             ],
           ),
-
           // Header row with dates
           Container(
             color: Colors.grey[300],
@@ -356,9 +377,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
         showModalBottomSheet(
           context: context,
           builder: (BuildContext context) {
-            return buildReservationDetailsModal(arrivingReservation!, guest);
+            return FractionallySizedBox(
+              heightFactor: 0.8, // Adjust this value as needed (0.8 = 80% of screen height)
+              child: buildReservationDetailsModal(arrivingReservation!, guest),
+            );
           },
         );
+
       }
     }
   }
@@ -486,23 +511,123 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   Widget buildReservationDetailsModal(Reservation reservation, Guest guest) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          const Text("Reservation Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Text("Guest Name: ${guest.name} ${guest.surname ?? ''}"),
-          Text("Email: ${guest.email}"),
-          Text("Phone: ${guest.phone}"),
-          Text("Check-in Date: ${formatDate(reservation.startDate)}"),
-          Text("Check-out Date: ${formatDate(reservation.endDate)}"),
-          Text("Status: ${reservation.status != null ? '${reservation.status[0].toUpperCase()}${reservation.status.substring(1)}' : 'No status'}"),
-        ],
-      ),
+    // State to hold the new selected status
+    String newStatus = reservation.status ?? 'Pending';
+
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Reservation Details"),
+              if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => confirmAndDeleteReservation(context, reservation.id),
+                ),
+            ],
+          ),
+          content: Container(
+            width: double.maxFinite,
+            //constraints: const BoxConstraints(maxWidth: 6000),
+            child: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  const SizedBox(height: 10),
+                  Text("Guest Name: ${guest.name} ${guest.surname ?? ''}"),
+                  Text("Email: ${guest.email}"),
+                  Text("Phone: ${guest.phone}"),
+                  Text("Check-in Date: ${formatDate(reservation.startDate)}"),
+                  Text("Check-out Date: ${formatDate(reservation.endDate)}"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Status Picker Dropdown
+                      Expanded(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: newStatus,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              newStatus = newValue!;
+                            });
+                          },
+                          items: <String>['Pending', 'Checked-in', 'Checked-out']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      // Save Button
+                      const SizedBox(width: 50), // Add some space between the dropdown and the button
+                      IconButton(
+                        icon: const Icon(Icons.save),
+                        onPressed: newStatus != reservation.status ? () {
+                          ReservationService.changeReservationStatus(reservationId: reservation.id, newStatus: newStatus);
+                          Navigator.pop(context); // Close the modal after saving
+                        } : null, // Disable button if status is unchanged
+                        style: ElevatedButton.styleFrom(
+                          primary: newStatus != reservation.status ? Colors.blue : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
+  }
+
+
+  void updateReservationStatus(int reservationId, String newStatus) {
+    // Implement the logic to update the reservation status in your database or backend
+    print('Updating reservation $reservationId to status $newStatus');
+  }
+
+
+  void confirmAndDeleteReservation(BuildContext context, int reservationId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Warning: This action cannot be undone!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the confirmation dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                // Implement the logic to delete the reservation
+                deleteReservation(reservationId);
+                Navigator.of(context).pop(); // Close the confirmation dialog
+                Navigator.of(context).pop(); // Close the reservation details dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteReservation(int reservationId) {
+    // Implement the logic to delete the reservation from your database or backend
+    print('Deleting reservation $reservationId');
   }
 
 }

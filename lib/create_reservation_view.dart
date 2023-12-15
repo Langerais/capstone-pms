@@ -290,7 +290,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
           endDate: selectedEndDate,
           roomId: selectedRoom!.id,
           guestId: actualGuestId,
-          dueAmount: dueAmount,
+          dueAmount: totalDueAmount,
         );
 
         Fluttertoast.showToast(

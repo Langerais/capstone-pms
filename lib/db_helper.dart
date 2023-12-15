@@ -102,6 +102,24 @@ class ReservationService {
     }
   }
 
+  static Future<void> changeReservationStatus({
+    required int reservationId,
+    required String newStatus,
+  }) async {
+    var url = Uri.parse('$BASE_URL/reservations/change_reservation_status/$reservationId');
+    var response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'status': newStatus,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to change reservation status');
+    }
+  }
+
 }
 
 class GuestService {
