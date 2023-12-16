@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'authentication.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 import 'drawer_menu.dart';
 
 class NotificationsView extends StatefulWidget {

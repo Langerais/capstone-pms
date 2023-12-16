@@ -174,6 +174,18 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   if (userGroup == UserGroup.Manager || userGroup == UserGroup.Admin) {
     // Menu items for Manager and Admin
 
+    drawerItems.add(
+      Container(
+        color: colorDone, // Change this to your desired color
+        child: ListTile(
+          leading: Icon(Icons.history),
+          title: Text('Logs'),
+          onTap: () {
+            Navigator.pushNamed(context, '/log_view'); // Navigate to Logs
+          },
+        ),
+      ),
+    );
 
     drawerItems.add(
       ListTile(

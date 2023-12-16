@@ -5,6 +5,7 @@ import 'cleaning_view.dart';
 import 'drawer_menu.dart';
 import 'arrivals_departures_view.dart';
 import 'guests_list.dart';
+import 'log_view.dart';
 import 'menu_view.dart';
 import 'authentication.dart';
 import 'notifications_view.dart';
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
         '/billing_view': (context) => BillingView(),
         '/cleaning_view': (context) => CleaningView(),
         '/notifications_view': (context) => NotificationsView(userGroup: userRole,),
+        '/log_view': (context) => LogsView(),
       },
     );
   }

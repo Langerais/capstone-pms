@@ -5,7 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'authentication.dart';
 import 'db_helper.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 import 'package:intl/intl.dart';
 import 'drawer_menu.dart';
 

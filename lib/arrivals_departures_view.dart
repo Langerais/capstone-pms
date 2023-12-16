@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'create_reservation_view.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 import 'db_helper.dart';
 import 'package:collection/collection.dart';
 
-// TODO: Add a Date Picker to select the week
+// TODO: Change Date Picker to Date Range Picker
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
 
@@ -99,16 +99,14 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     setState(() => isLoading = true);
     try {
       // Fetch reservations for the current week + 1 week before and after
-      DateTime previousWeekStart = currentWeekStart.subtract(Duration(days: 7));
-      DateTime nextWeekEnd = currentWeekStart.add(Duration(days: 14));
+      DateTime previousWeekStart = currentWeekStart.subtract(const Duration(days: 7));
+      DateTime nextWeekEnd = currentWeekStart.add(const Duration(days: 14));
       reservations = await ReservationService.getReservationsByDateRange(previousWeekStart, nextWeekEnd);
-      if (kDebugMode) {print("Reservations fetched");}
 
       rooms = await RoomService.getRooms();
-      if (kDebugMode) {print("Rooms fetched");}
 
       guests = await GuestService.getGuests();
-      if (kDebugMode) {print("Guests fetched");}
+
 
     } catch (e) {
       if (kDebugMode) {
@@ -566,9 +564,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       const SizedBox(width: 50), // Add some space between the dropdown and the button
                       IconButton(
                         icon: const Icon(Icons.save),
-                        onPressed: newStatus != reservation.status ? () {
-                          ReservationService.changeReservationStatus(reservationId: reservation.id, newStatus: newStatus);
-                          Navigator.pop(context); // Close the modal after saving
+                        onPressed: newStatus != reservation.status ? () async {
+                          await ReservationService.changeReservationStatus(reservationId: reservation.id, newStatus: newStatus);
+                          Navigator.pop(context);
+                          fetchData();
+                          // Close the modal after saving
                         } : null, // Disable button if status is unchanged
                         style: ElevatedButton.styleFrom(
                           primary: newStatus != reservation.status ? Colors.blue : Colors.grey,
@@ -583,12 +583,6 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
         );
       },
     );
-  }
-
-
-  void updateReservationStatus(int reservationId, String newStatus) {
-    // Implement the logic to update the reservation status in your database or backend
-    print('Updating reservation $reservationId to status $newStatus');
   }
 
 
@@ -607,17 +601,22 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
               },
             ),
             TextButton(
-              child: const Text('Delete'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              onPressed: () {
+              onPressed: () async {
                 // Implement the logic to delete the reservation
-                deleteReservation(reservationId);
+                await ReservationService.deleteReservation(reservationId: reservationId);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Reservation deleted')),
+                );
                 Navigator.of(context).pop(); // Close the confirmation dialog
                 Navigator.of(context).pop(); // Close the reservation details dialog
+                fetchData();
               },
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -625,10 +624,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     );
   }
 
-  void deleteReservation(int reservationId) {
-    // Implement the logic to delete the reservation from your database or backend
-    print('Deleting reservation $reservationId');
-  }
+
 
 }
 

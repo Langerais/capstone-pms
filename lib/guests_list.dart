@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'db_helper.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 
 
 class GuestsListView extends StatefulWidget {

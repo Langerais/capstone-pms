@@ -35,6 +35,7 @@ class Reservation {
   final DateTime endDate;
   final double dueAmount;
   final String status;
+  final int userId = 6; // TODO: Remove this when authentication is implemented
 
   Reservation({
     required this.id,
@@ -257,5 +258,66 @@ class RoomCleaningData {
     schedules[schedule.actionId] = schedule;
   }
 }
+
+class Log {
+  final int id;
+  final int userId;
+  final String action;
+  final String details;
+  final DateTime timestamp;
+
+  Log({required this.id, required this.userId, required this.action, required this.details, required this.timestamp});
+
+  factory Log.fromJson(Map<String, dynamic> json) {
+    return Log(
+      id: json['id'],
+      userId: json['user_id'],
+      action: json['action'],
+      details: json['details'],
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+}
+
+class User {
+  final int id;
+  final String name;
+  final String surname;
+  final String phone;
+  final String email;
+  final String department;
+
+  User({
+    required this.id,
+    required this.name,
+    required this.surname,
+    required this.phone,
+    required this.email,
+    required this.department,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      surname: json['surname'] as String,
+      phone: json['phone'] as String,
+      email: json['email'] as String,
+      department: json['department'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'surname': surname,
+      'phone': phone,
+      'email': email,
+      'department': department,
+    };
+  }
+}
+
 
 

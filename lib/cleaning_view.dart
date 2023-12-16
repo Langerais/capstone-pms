@@ -2,7 +2,7 @@ import 'package:capstone_pms/authentication.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 import 'package:intl/intl.dart';
 
 import 'drawer_menu.dart';

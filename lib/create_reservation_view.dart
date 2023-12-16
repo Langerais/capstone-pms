@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'dbObjects.dart';
+import 'models.dart';
 import 'db_helper.dart';
 
 
@@ -266,7 +266,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         }
 
         // Check if room is available for the selected date range (Whether no other reservations appeared for the room and date range while the user was creating the reservation)
-        List<Reservation> checkReservations = await ReservationService.getReservationsByRoomAndDateRange(selectedStartDate, selectedEndDate, selectedRoom!.id);
+        List<Reservation> checkReservations = await ReservationService.getReservationsByRoomAndDateRange(selectedStartDate.add(Duration(days: 1)), selectedEndDate.subtract(Duration(days: 1)), selectedRoom!.id);
         if(checkReservations.isNotEmpty) {
 
           Fluttertoast.showToast(
@@ -293,14 +293,8 @@ class _CreateReservationViewState extends State<CreateReservationView> {
           dueAmount: totalDueAmount,
         );
 
-        Fluttertoast.showToast(
-            msg: "Reservation Created Successfully",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-            fontSize: 16.0
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reservation created successfully')),
         );
 
         widget.onReservationCreated();
