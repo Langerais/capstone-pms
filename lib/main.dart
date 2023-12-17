@@ -10,15 +10,32 @@ import 'log_view.dart';
 import 'menu_view.dart';
 import 'authentication.dart';
 import 'notifications_view.dart';
+import 'db_helper.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 
 
 void main() {
+  tz.initializeTimeZones();
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  void initState() {
+    super.initState();
+    //TimeZoneService.fetchTimezone();
+    //print('Timezone: ${TimeZoneService.fetchTimezone()}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +82,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});

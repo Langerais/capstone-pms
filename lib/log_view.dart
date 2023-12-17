@@ -80,8 +80,10 @@ class _LogsViewState extends State<LogsView> {
         details: _searchQuery,
       );
 
+
       setState(() {
         _logs = fetchedLogs.map<Log>((json) => Log.fromJson(json)).toList();
+        _logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       });
     } catch (e) {
       if (kDebugMode) {

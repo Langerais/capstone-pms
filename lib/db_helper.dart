@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 // TODO: Save URL in a config file
 const _baseUrl = 'http://16.16.140.209:5000';  //TODO: Move to config file
 const REFRESH_TIMER = 600;  // Refresh db every X seconds TODO: Move to config file
+const _timezoneDefault = 'Europe/Athens'; // Default to Athens timezone TODO: Move to config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
@@ -846,6 +847,32 @@ class UsersService {
       throw Exception(message);
     }
   }
+}
+
+
+class TimeZoneService {
+
+  static String _timezone = 'UTC'; // Default timezone
+
+  static Future<String?> fetchTimezone() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/get_timezone'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        _timezone = data['timezone'];
+        return _timezone;
+      } else {
+        // Handle non-200 response (optional)
+        return null; // Or handle as appropriate
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load timezone: $e');
+      }
+      return null; // Or handle as appropriate
+    }
+  }
+
 }
 
 
