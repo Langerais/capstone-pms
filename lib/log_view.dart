@@ -8,6 +8,8 @@ import 'drawer_menu.dart';
 
 
 class LogsView extends StatefulWidget {
+  const LogsView({super.key});
+
   @override
   _LogsViewState createState() => _LogsViewState();
 }
@@ -190,17 +192,17 @@ class _LogsViewState extends State<LogsView> {
                     );
                   }).toList(),
                 ),
-                SizedBox(width: 20),
+                const SizedBox(width: 20),
                 // Search Icon Button
                 IconButton(
                   icon: CircleAvatar(
                     radius: 20, // Adjust the radius for size
                     backgroundColor: Theme.of(context).primaryColor, // Set the color
-                    child: Icon(Icons.search, size: 24), // Adjust icon size
+                    child: const Icon(Icons.search, size: 24), // Adjust icon size
                   ),
                   onPressed: _fetchLogs,
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
               ]
           ),
 
@@ -209,7 +211,11 @@ class _LogsViewState extends State<LogsView> {
               itemCount: _logs.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_logs[index].action),
+                  title: Text('${_logs[index].action} | '
+                      '${_users.firstWhere((user) => user.id == _logs[index].userId).name} '
+                      '${_users.firstWhere((user) => user.id == _logs[index].userId).surname} | '
+                      '${_users.firstWhere((user) => user.id == _logs[index].userId).department}'
+                      '\n${DateFormat('yyyy-MM-dd HH:mm').format(_logs[index].timestamp)}'),
                   subtitle: Text(_logs[index].details),
                   // Add more details as needed
                 );

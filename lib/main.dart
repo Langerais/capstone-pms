@@ -1,5 +1,6 @@
 //import 'dart:html';
 import 'package:capstone_pms/billing_view.dart';
+import 'package:capstone_pms/profile_view.dart';
 import 'package:flutter/material.dart';
 import 'cleaning_view.dart';
 import 'drawer_menu.dart';
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         '/cleaning_view': (context) => CleaningView(),
         '/notifications_view': (context) => NotificationsView(userGroup: userRole,),
         '/log_view': (context) => LogsView(),
+        '/profile_view': (context) => UserProfileView(),
       },
     );
   }

@@ -224,15 +224,18 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
       ),
     );
 
-    drawerItems.add(
-      ListTile(
-        leading: const Icon(Icons.account_box),
-        title: const Text('Profile / TBD'),
+  drawerItems.add(
+    Container(
+      color: colorWIP, // Change this to your desired color
+      child: ListTile(
+        leading: Icon(Icons.person),
+        title: Text('Profile / WIP'),
         onTap: () {
-          // Navigate to Account
+          Navigator.pushNamed(context, '/profile_view'); // Navigate to Profile
         },
       ),
-    );
+    ),
+  );
 
   drawerItems.add(
     ListTile(

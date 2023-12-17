@@ -774,7 +774,7 @@ class UsersService {
         'department': department,
       }),
     );
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200) {
       throw Exception('Failed to modify User');
     }
   }
@@ -818,7 +818,7 @@ class UsersService {
     }
   }
 
-  static Future<List<dynamic>> getUsersByDepartment(String department) async {
+  static Future<List<User>> getUsersByDepartment(String department) async {
     var url = Uri.parse('$_baseUrl/users/get_users_by_department/$department');
     var response = await http.get(url);
     if (response.statusCode == 200) {
@@ -826,6 +826,24 @@ class UsersService {
       return jsonData.map((json) => User.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load Users by $department department');
+    }
+  }
+
+  static Future<void> changePassword(int userId, String oldPassword, String newPassword) async {
+    var url = Uri.parse('$_baseUrl/users/change_password/$userId');
+    var response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'old_password': oldPassword,
+        'new_password': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      Map<String, dynamic> responseBody = json.decode(response.body);
+      String message = responseBody['msg'] ?? 'Failed to update password';
+      throw Exception(message);
     }
   }
 }
