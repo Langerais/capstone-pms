@@ -59,9 +59,42 @@ class _UserManagementViewState extends State<UserManagementView> {
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
+
+    // Check if the user is trying to change the admin user and is not an admin
+    if(_selectedUser?.department == 'Admin' && _currentUser?.department != 'Admin'){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot change admin user')),
+      );
+      return;
+    }
+
+    // Check if the user is trying to make a user an admin or manager and is not an admin
+    if((_selectedDepartment == 'Admin' || _selectedDepartment == 'Manager') && _currentUser?.department != 'Admin'){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot make user admin or manager')),
+      );
+      return;
+    }
+
+    // Check if user is trying to change department of Admin user
+    if(_selectedUser?.department == 'Admin' && _selectedDepartment != 'Admin'){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot change admin department')),
+      );
+      return;
+    }
+
+    // Check if the user is trying to change the manager department and is not an admin
+    if(_selectedUser?.department == 'Manager' && _currentUser?.department != 'Admin'){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot change manager user')),
+      );
+      return;
+    }
+
     if (_managerPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter the manager password')),
+        const SnackBar(content: Text('Please enter the manager password')),
       );
       return;
     }

@@ -145,17 +145,6 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
       ),
     );
 
-    drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.swap_vert),
-        title: Text('Check In/Out'),  // TODO: Move to Arrivals / Departures
-        onTap: () {
-          // Navigate to Check-in
-          Navigator.pop(context);
-        },
-      ),
-    );
-
 
     drawerItems.add(
       ListTile(
@@ -189,10 +178,10 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       Container(
-        color: colorWIP, // Change this to your desired color
+        color: colorDone, // Change this to your desired color
         child: ListTile(
           leading: Icon(Icons.people),
-          title: Text('User Management / WIP'),
+          title: Text('User Management'),
           onTap: () {
             Navigator.pushNamed(context, '/user_management_view'); // Navigate to User Management
           },
