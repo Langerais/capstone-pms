@@ -188,15 +188,17 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     );
 
     drawerItems.add(
-      ListTile(
-        leading: Icon(Icons.people),
-        title: Text('User Management / TBD'),
-        onTap: () {
-          // Navigate to User Management
-        },
+      Container(
+        color: colorWIP, // Change this to your desired color
+        child: ListTile(
+          leading: Icon(Icons.people),
+          title: Text('User Management / WIP'),
+          onTap: () {
+            Navigator.pushNamed(context, '/user_management_view'); // Navigate to User Management
+          },
+        ),
       ),
     );
-    // Add more menu items as needed
   }
 
   /////////////////// Admin-specific menu items /////////////////////////////////////////////
@@ -226,10 +228,10 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   drawerItems.add(
     Container(
-      color: colorWIP, // Change this to your desired color
+      color: colorDone, // Change this to your desired color
       child: ListTile(
         leading: Icon(Icons.person),
-        title: Text('Profile / WIP'),
+        title: Text('Profile'),
         onTap: () {
           Navigator.pushNamed(context, '/profile_view'); // Navigate to Profile
         },

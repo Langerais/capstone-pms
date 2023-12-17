@@ -847,6 +847,39 @@ class UsersService {
       throw Exception(message);
     }
   }
+
+  static Future<void> changePasswordManager(int userId, String managerPassword, String newPassword) async {
+    var url = Uri.parse('$_baseUrl/users/change_password_manager/$userId');
+    var response = await http.put(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'manager_password': managerPassword,
+        'new_password': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      Map<String, dynamic> responseBody = json.decode(response.body);
+      String message = responseBody['msg'] ?? 'Failed to update password';
+      throw Exception(message);
+    }
+  }
+
+  static Future<List<Department>> getAllDepartments() async {
+    final response = await http.get(Uri.parse('$_baseUrl/users/get_all_departments'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> departmentJsonList = jsonDecode(response.body);
+      final List<Department> departments = departmentJsonList
+          .map((dynamic json) => Department.fromJson(json))
+          .toList();
+      return departments;
+    } else {
+      throw Exception('Failed to fetch departments');
+    }
+  }
+
 }
 
 

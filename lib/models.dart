@@ -319,5 +319,30 @@ class User {
   }
 }
 
+class Department {
+  final String departmentName;
+  final String description;
+
+  Department({
+    required this.departmentName,
+    required this.description,
+  });
+
+  factory Department.fromJson(Map<String, dynamic> json) {
+    return Department(
+      departmentName: json['department_name'] as String,
+      description: json['description'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'department_name': departmentName,
+      'description': description,
+    };
+  }
+}
+
+
 
 

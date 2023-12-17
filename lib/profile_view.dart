@@ -75,6 +75,8 @@ class _UserProfileViewState extends State<UserProfileView> {
     });
   }
 
+
+
   /// Function called when any field in the form is changed.
   void _onFieldChanged() {
     if (!_isFormModified) {
@@ -109,7 +111,7 @@ class _UserProfileViewState extends State<UserProfileView> {
                 children: [
                   Expanded(
                     child: Text(
-                      'User: ${currentUser!.name} ${currentUser!.surname}',
+                      'User: ${currentUser?.name ?? 'Loading...'} ${currentUser?.surname ?? ''}',
                       style: const TextStyle(
                         fontSize: 18,
                       ),
@@ -118,7 +120,7 @@ class _UserProfileViewState extends State<UserProfileView> {
                   const SizedBox(width: 16.0),
                   Expanded(
                     child: Text(
-                      'Role: ${currentUser!.department}',
+                      'Role: ${currentUser?.department ?? 'Loading...'}',
                       textAlign: TextAlign.start,
                       style: const TextStyle(
                         fontSize: 18,
