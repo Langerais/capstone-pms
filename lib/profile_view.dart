@@ -1,3 +1,32 @@
+/// UserProfileView.dart
+///
+/// This file contains the UserProfileView class, used
+/// for displaying and managing a user's profile within application.
+/// The view allows users to view and edit their personal information such as
+/// email, phone number, and password.
+///
+/// Features:
+/// - Display current user information including name, surname, and role.
+/// - Allow users to modify their email and phone number with validation checks.
+/// - Enable password changes with security measures including password strength
+///   validation and current password verification.
+/// - Implement a form-based interface with proper validation for all fields.
+/// - Utilize TextEditingController for managing user input and form state.
+/// - Provide a responsive UI that adjusts to various screen sizes and orientations.
+/// - Integrate with backend services for data retrieval and update operations.
+///
+/// Usage:
+/// This view is used as part of a navigation flow within the app,
+/// allowing users to access their profile.
+///
+/// Note:
+/// - The file depends on external services like Auth and UsersService for
+///   authentication and data handling.
+/// - Error handling and user feedback mechanisms are implemented to guide
+///   the user through the profile update process.
+library;
+
+
 import 'dart:async';
 import 'package:capstone_pms/authentication.dart';
 import 'package:flutter/foundation.dart';
@@ -23,14 +52,15 @@ class _UserProfileViewState extends State<UserProfileView> {
   final TextEditingController confirmPhoneController = TextEditingController();
   final TextEditingController currentPasswordController = TextEditingController();
 
+  // Key to identify the form and its state
   final _formKey = GlobalKey<FormState>();
 
-  User ?currentUser;
-  bool isEditingEmail = false;
-  bool isEditingPhone = false;
-  bool isChangingPassword = false;
-  bool _isFormModified = false;
-  bool? _isCurrentPasswordValid;
+  User? currentUser; // Holds the current user's data
+  bool isEditingEmail = false; // Flag to indicate if the email is being edited
+  bool isEditingPhone = false; // Flag to indicate if the phone is being edited
+  bool isChangingPassword = false; // Flag to indicate if the password is being changed
+  bool _isFormModified = false; // Flag to indicate if the form has been modified
+  bool? _isCurrentPasswordValid; // Flag to indicate if the current password is valid
 
   @override
   void initState() {
@@ -45,6 +75,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     });
   }
 
+  /// Function called when any field in the form is changed.
   void _onFieldChanged() {
     if (!_isFormModified) {
       setState(() {
@@ -111,6 +142,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     );
   }
 
+  // Builds the email field and its associated logic
   Widget _buildEmailField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -137,7 +169,7 @@ class _UserProfileViewState extends State<UserProfileView> {
         if (isEditingEmail)
           TextFormField(
             controller: confirmEmailController,
-            decoration: InputDecoration(labelText: 'Confirm Email'),
+            decoration: const InputDecoration(labelText: 'Confirm Email'),
             validator: (value) {
               if (value != newEmailController.text) {
                 return 'Emails do not match';
@@ -152,13 +184,14 @@ class _UserProfileViewState extends State<UserProfileView> {
               newEmailController.clear();
               confirmEmailController.clear();
             }),
-            child: Text('Change Email'),
+            child: const Text('Change Email'),
           ),
 
       ],
     );
   }
 
+  // Builds the phone field and its associated logic
   Widget _buildPhoneField() {
 
     final phoneRegex = RegExp(r'^\+?1?\d{9,15}$');
@@ -208,18 +241,19 @@ class _UserProfileViewState extends State<UserProfileView> {
               newPhoneController.clear();
               confirmPhoneController.clear();
             }),
-            child: Text('Change Phone'),
+            child: const Text('Change Phone'),
           ),
       ],
     );
   }
 
+  // Builds the password fields for changing password
   Widget _buildPasswordFields() {
     return Column(
       children: [
         TextFormField(
           controller: newPasswordController,
-          decoration: InputDecoration(labelText: 'New Password'),
+          decoration: const InputDecoration(labelText: 'New Password'),
           obscureText: true,
           validator: (value) => _validatePassword(value),
           onChanged: (value) {
@@ -229,7 +263,7 @@ class _UserProfileViewState extends State<UserProfileView> {
 
         TextFormField(
           controller: confirmNewPasswordController,
-          decoration: InputDecoration(labelText: 'Confirm New Password'),
+          decoration: const InputDecoration(labelText: 'Confirm New Password'),
           obscureText: true,
           validator: (value) {
             if (value != newPasswordController.text) {
@@ -242,6 +276,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     );
   }
 
+  // Builds the field for entering the current password
   Widget _buildCurrentPasswordField() {
     return TextFormField(
       controller: currentPasswordController,
@@ -260,6 +295,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     );
   }
 
+  // Builds save and cancel buttons
   Widget _buildSaveCancelButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -285,6 +321,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     );
   }
 
+  // Function to save profile changes
   void _saveProfile() async {
       try {
         if (kDebugMode) {
@@ -354,6 +391,7 @@ class _UserProfileViewState extends State<UserProfileView> {
 
   }
 
+  // Function to validate the password
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter a password';
@@ -367,6 +405,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     return null;
   }
 
+  // Function to cancel edits and revert to original data
   void _cancelEdit() {
     // Reset form and state
     Auth.getCurrentUser().then((user) {
