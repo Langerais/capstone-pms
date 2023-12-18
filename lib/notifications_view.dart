@@ -83,19 +83,25 @@ class _NotificationsViewState extends State<NotificationsView> {
     return Scaffold(
       appBar: AppBar(
 
-        title: DropdownButton<String>(
-          value: selectedNotificationTitle,
-          onChanged: (String? newValue) {
-            setState(() {
-              selectedNotificationTitle = newValue!;
-            });
-          },
-          items: notificationTitles.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
+        title: Row(
+          children: [
+            const Text('Notifications'),
+            const SizedBox(width: 20),
+            DropdownButton<String>(
+              value: selectedNotificationTitle,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedNotificationTitle = newValue!;
+                });
+              },
+              items: notificationTitles.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+          ],
         ),
 
         actions: <Widget>[
