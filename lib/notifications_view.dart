@@ -96,12 +96,13 @@ class _NotificationsViewState extends State<NotificationsView> {
           }).toList(),
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              _showAddNotificationDialog();
-            },
-          ),
+          if(Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                _showAddNotificationDialog();
+              },
+            ),
         ],
       ),
 
