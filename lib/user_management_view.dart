@@ -124,15 +124,25 @@ class _UserManagementViewState extends State<UserManagementView> {
       );
     }
 
+    // Update department
+    if (_selectedUser!.department != _selectedDepartment) {
+      await UsersService.changeDepartment(
+        _selectedUser!.id,
+        _selectedDepartment!.toString()
+      );
+    }
+
     // Update other user details
-    await UsersService.modifyUser(
-      name: _selectedUser!.name,
-      surname: _selectedUser!.surname,
-      userId: _selectedUser!.id,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      department: _selectedDepartment!,
-    );
+    if(_selectedUser!.email != _emailController.text || _selectedUser!.phone != _phoneController.text){
+      await UsersService.modifyUser(
+        name: _selectedUser!.name,
+        surname: _selectedUser!.surname,
+        userId: _selectedUser!.id,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        department: _selectedUser!.department,
+      );
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('User updated successfully')),

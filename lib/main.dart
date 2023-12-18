@@ -76,10 +76,10 @@ class _MyAppState extends State<MyApp> {
         '/menu_view': (context) => MenuView(),
         '/billing_view': (context) => BillingView(),
         '/cleaning_view': (context) => CleaningView(),
-        '/notifications_view': (context) => NotificationsView(userGroup: userRole,),
         '/log_view': (context) => LogsView(),
         '/profile_view': (context) => UserProfileView(),
         '/user_management_view': (context) => UserManagementView(),
+        '/notifications_view': (context) => const NotificationsView(),
       },
     );
   }

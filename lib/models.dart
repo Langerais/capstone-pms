@@ -343,6 +343,48 @@ class Department {
   }
 }
 
+class AppNotification {
+  final int id;
+  final String title;
+  final String message;
+  final String department;
+  final int priority;
+  final DateTime expiryDate;
+
+  AppNotification({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.department,
+    required this.priority,
+    required this.expiryDate,
+  });
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      message: json['message'] as String,
+      department: json['department'] as String,
+      priority: json['priority'] as int,
+      expiryDate: DateTime.parse(json['expiry_date'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'message': message,
+      'department': department,
+      'priority': priority,
+      'expiry_date': expiryDate.toIso8601String(),
+    };
+  }
+}
+
+
+
 
 
 

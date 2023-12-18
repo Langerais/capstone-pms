@@ -48,7 +48,7 @@ class _LogsViewState extends State<LogsView> {
     try {
       List<User> usersFromService = await UsersService.getUsers();
       setState(() {
-        _users = [User(id: 0, name: 'All Users', surname: '', department: '', email: '', phone: '')] + usersFromService;
+        _users = [User(id: -1, name: 'All Users', surname: '', department: '', email: '', phone: '')] + usersFromService;
         _selectedUserId = _users[0].id;
       });
     } catch (e) {
@@ -190,7 +190,7 @@ class _LogsViewState extends State<LogsView> {
                   items: _users.map<DropdownMenuItem<int>>((User user) {
                     return DropdownMenuItem<int>(
                       value: user.id,
-                      child: Text(user.id == 0 ? user.name : '${user.id} ${user.name} ${user.surname} (${user.department})'),
+                      child: Text(user.id <= 0 ? user.name : '${user.id} ${user.name} ${user.surname} (${user.department})'),
                     );
                   }).toList(),
                 ),
@@ -202,7 +202,9 @@ class _LogsViewState extends State<LogsView> {
                     backgroundColor: Theme.of(context).primaryColor, // Set the color
                     child: const Icon(Icons.search, size: 24), // Adjust icon size
                   ),
-                  onPressed: _fetchLogs,
+                  onPressed: () {
+                    _fetchLogs(); // Call the method to fetch logs
+                  },
                 ),
                 const SizedBox(width: 15),
               ]

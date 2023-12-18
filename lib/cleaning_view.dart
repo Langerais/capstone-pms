@@ -302,6 +302,7 @@ class _CleaningScheduleViewState extends State<CleaningView> {
   // Helper function to toggle the status of a cleaning schedule
   void _toggleStatus(CleaningSchedule schedule, Function refreshCell) async {
     String newStatus = schedule.status == 'pending' ? 'completed' : 'pending';
+    print('Toggling status of schedule ${schedule.id} to $newStatus');
     try {
       await CleaningService.toggleCleaningTaskStatus(schedule.id, newStatus, DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()));
       schedule.status = newStatus; // Update the schedule's status

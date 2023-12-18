@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'authentication.dart';
+import 'notifications_view.dart';
 
 
 class CustomAppBar extends StatelessWidget {
@@ -77,7 +78,10 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
         leading: Icon(Icons.home),
         title: Text('Notifications / WIP'),
         onTap: () {
-          Navigator.pushNamed(context, '/notifications_view'); // Navigate to Notifications
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NotificationsView()),
+          ); // Navigate to Notifications
         },
       ),
     ),

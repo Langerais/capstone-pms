@@ -556,7 +556,6 @@ class CleaningService {
       url,
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
-        'id': scheduleId,
         'completed_date': completedDate,
         'task_status': newStatus,
       }),
@@ -712,6 +711,7 @@ class LogService {
       'details': details,
     };
 
+
     // Remove null entries
     queryParams.removeWhere((key, value) => value == null);
 
@@ -780,10 +780,7 @@ class UsersService {
     }
   }
 
-  static Future<void> changeDepartment({
-    required int userId,
-    required String department,
-  }) async {
+  static Future<void> changeDepartment(int userId, String department) async {
     var url = Uri.parse('$_baseUrl/users/change_department/$userId');
     var response = await http.put(
       url,
@@ -905,6 +902,50 @@ class TimeZoneService {
       return null; // Or handle as appropriate
     }
   }
+
+}
+
+class AppNotificationsService {
+
+  static Future<List<AppNotification>> getAppNotifications() async {
+    final response = await http.get(Uri.parse('$_baseUrl/notifications/get_notifications'));
+
+    if (response.statusCode == 200) {
+      List jsonResponse = json.decode(response.body);
+      return jsonResponse.map((data) => AppNotification.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load notifications');
+    }
+  }
+
+  static Future<List<AppNotification>> getAppNotificationsByDepartment(String department) async {
+    final response = await http.get(Uri.parse('$_baseUrl/notifications/get_notifications/department/$department'));
+
+    if (response.statusCode == 200) {
+      List jsonResponse = json.decode(response.body);
+      return jsonResponse.map((data) => AppNotification.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load notifications');
+    }
+  }
+
+
+  static Future<void> createNotification(AppNotification notification) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/notifications'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(notification.toJson()),
+    );
+
+    if (response.statusCode == 201) {
+      // Handle successful creation
+    } else {
+      // Handle error
+    }
+  }
+
 
 }
 
