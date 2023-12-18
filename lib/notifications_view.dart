@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'authentication.dart';
 import 'db_helper.dart';
+import 'drawer_menu.dart';
 import 'models.dart';
 import 'package:http/http.dart' as http;
 
@@ -81,6 +82,7 @@ class _NotificationsViewState extends State<NotificationsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
         title: DropdownButton<String>(
           value: selectedNotificationTitle,
           onChanged: (String? newValue) {
@@ -95,6 +97,7 @@ class _NotificationsViewState extends State<NotificationsView> {
             );
           }).toList(),
         ),
+
         actions: <Widget>[
           if(Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
             IconButton(
@@ -105,7 +108,14 @@ class _NotificationsViewState extends State<NotificationsView> {
             ),
         ],
       ),
-
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
+          ],
+        ),
+      ),
       body: ListView.builder(
         itemCount: filteredNotifications.length,
         itemBuilder: (context, index) {
