@@ -59,16 +59,28 @@ class _NotificationsViewState extends State<NotificationsView> {
           Auth.getUserRole().name
       );
 
+      // Sort notifications by priority and then by time to live
+      notificationsList.sort((a, b) {
+        // Compare by priority first
+        int priorityComparison = a.priority.compareTo(b.priority);
+        if (priorityComparison != 0) {
+          return priorityComparison;
+        }
+
+        // If priorities are equal, compare by expiry date (time to live)
+        return a.expiryDate.compareTo(b.expiryDate);
+      });
+
       setState(() {
         notifications = notificationsList;
-        notificationTitles = ['AllNotifications', ...notificationsList.map((n) => n.title).toSet().toList()]
-          ;
+        notificationTitles = ['AllNotifications', ...notificationsList.map((n) => n.title).toSet().toList()];
       });
 
     } catch (e) {
       // Handle network error
     }
   }
+
 
   List<AppNotification> get filteredNotifications {
     if (selectedNotificationTitle == 'AllNotifications') {
@@ -126,8 +138,23 @@ class _NotificationsViewState extends State<NotificationsView> {
         itemCount: filteredNotifications.length,
         itemBuilder: (context, index) {
           final notification = filteredNotifications[index];
+
+          bool isAlert = notification.title.startsWith('ALERT') || notification.title.startsWith('UNPAID');
+          bool isAttention = notification.title.startsWith('ATTENTION') || notification.title.startsWith('Expected Arrival');
+          bool isReminder = notification.title.startsWith('Reminder:') || notification.title.startsWith('Expected Departure');
+
           return ListTile(
-            title: Text(notification.title),
+            title: Text(
+              notification.title,
+              style: TextStyle(
+                color:
+                isAlert ? Colors.red :
+                (isAttention ? Colors.orange :
+                (isReminder ? Colors.green :
+                Colors.black)),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             subtitle: Text(notification.message),
           );
         },
@@ -155,9 +182,10 @@ class _NotificationsViewState extends State<NotificationsView> {
                   children: <Widget>[
                     // Prefix Selector
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         const Text('Prefix: '),
+                        SizedBox(width: 20),
                         DropdownButton<String>(
                           value: selectedPrefix,
                           onChanged: (String? newValue) {
@@ -185,6 +213,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                       onChanged: (value) => notificationMessage = value,
                       decoration: const InputDecoration(labelText: 'Notification Message'),
                     ),
+                    SizedBox(height: 15),
                     // User Role Picker
                     ElevatedButton(
                       child: const Text('Select Roles'),
@@ -253,16 +282,38 @@ class _NotificationsViewState extends State<NotificationsView> {
               actions: <Widget>[
                 ElevatedButton(
                   child: const Text('Save'),
-                  onPressed: () {
+                  onPressed: () async {
+                    // Calculate the expiry date
+                    DateTime expiryDate = DateTime.now().add(lifetime);
+
+                    // Invert priority
+                    int invertedPriority = -selectedPriority;
+
+                    // Iterate over selected roles and create notifications
+                    selectedRoles.forEach((role, isSelected) async {
+                      if (isSelected) {
+                        // Create a notification object for each selected role
+                        AppNotification newNotification = AppNotification(
+                          id: 0, // Assuming ID is assigned by the backend
+                          title: selectedPrefix + notificationTitle,
+                          message: notificationMessage,
+                          department: role, // Use the role as the department
+                          priority: invertedPriority,
+                          expiryDate: expiryDate,
+                        );
+
+                        // Call the method to save the notification
+                        await AppNotificationsService.createNotification(newNotification);
+                      }
+                    });
+
                     setState(() {
                       lifetime = Duration(days: days, hours: hours, minutes: minutes);
                     });
-                    if (kDebugMode) {
-                      print('Lifetime: $lifetime');
-                    }
                     Navigator.of(context).pop();
                   },
                 ),
+
               ],
             );
           },

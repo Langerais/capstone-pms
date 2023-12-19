@@ -153,6 +153,7 @@ class _LogsViewState extends State<LogsView> {
                 onPressed: () {
                   setState(() {
                     _selectedDateRange = null;  // Set the date range to null
+                    _fetchLogs();
                   });
                 },
               ),

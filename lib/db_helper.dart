@@ -133,6 +133,30 @@ class ReservationService {
     }
   }
 
+  static Future<List<ReservationStatusChange>> getAllReservationStatusChanges() async {
+    final url = Uri.parse('$_baseUrl/reservations/get_reservation_status_changes');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      return body.map((dynamic item) => ReservationStatusChange.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load reservation status changes');
+    }
+  }
+
+  static Future<List<ReservationStatusChange>> getReservationStatusChangeByReservation(int reservationId) async {
+    final url = Uri.parse('$_baseUrl/reservations/get_reservation_status_changes/$reservationId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      return body.map((dynamic item) => ReservationStatusChange.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load reservation status change');
+    }
+  }
+
 }
 
 class GuestService {
@@ -755,6 +779,39 @@ class UsersService {
     }
   }
 
+  static Future<Map<String, dynamic>> registerUser({
+    required String name,
+    required String surname,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    final url = Uri.parse('$_baseUrl/registration/register'); // Update with your actual server URL
+
+    final response = await http.post(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'name': name,
+        'surname': surname,
+        'email': email,
+        'phone': phone,
+        'password': password,
+        'department': 'Pending', // Department is set to 'Pending' by default
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      // User created successfully
+      return {'success': true, 'message': json.decode(response.body)['msg']};
+    } else {
+      // Error occurred
+      return {'success': false, 'message': json.decode(response.body)['msg']};
+    }
+  }
+
   static Future<void> modifyUser({
     required int userId,
     required String name,
@@ -932,7 +989,7 @@ class AppNotificationsService {
 
   static Future<void> createNotification(AppNotification notification) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/notifications'),
+      Uri.parse('$_baseUrl/notifications/add_notification'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

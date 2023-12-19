@@ -68,6 +68,33 @@ class Reservation {
   }
 }
 
+class ReservationStatusChange {
+  final int id;
+  final int reservationId;
+  final String status;
+  final DateTime timestamp;
+  final int userId = 6; // TODO: Remove this when authentication is implemented
+
+  ReservationStatusChange({
+    required this.id,
+    required this.reservationId,
+    required this.status,
+    required this.timestamp,
+    //required this.userId,
+  });
+
+  factory ReservationStatusChange.fromJson(Map<String, dynamic> json) {
+    return ReservationStatusChange(
+      id: json['id'] as int,
+      reservationId: json['reservation_id'] as int,
+      status: json['status'] as String,
+      timestamp: DateTime.parse(json['timestamp']),
+      //userId: json['user_id'] as int,
+    );
+  }
+}
+
+
 DateTime? parseCustomDateFormat(String dateString) {
   try {
     // Split the date string by spaces and colons

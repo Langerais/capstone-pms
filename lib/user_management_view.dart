@@ -49,6 +49,20 @@ class _UserManagementViewState extends State<UserManagementView> {
     }
   }
 
+  void _refreshUserList() async {
+    try {
+      List<User> users = await UsersService.getUsers();
+      setState(() {
+        _users = users;
+        // You may need to reset _selectedUser or other related states as well
+        _selectedUser = _users.isNotEmpty ? _users.first : null;
+        _updateControllers();
+      });
+    } catch (e) {
+      // Handle errors if necessary
+    }
+  }
+
 
   void _updateControllers() {
     _emailController.text = _selectedUser?.email ?? '';
@@ -148,7 +162,7 @@ class _UserManagementViewState extends State<UserManagementView> {
       SnackBar(content: Text('User updated successfully')),
     );
 
-    _managerPasswordController.clear();
+    _managerPasswordController.clear(); //TODO: Fix dropdown refresh on save and manager password clear
 
     // Refresh the user list
     await _initializeView();
@@ -157,7 +171,15 @@ class _UserManagementViewState extends State<UserManagementView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('User Management')),
+      appBar: AppBar(
+        title: Text('User Management'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _navigateToNewUserView,
+          ),
+        ],
+      ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -166,6 +188,7 @@ class _UserManagementViewState extends State<UserManagementView> {
           ],
         ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -197,7 +220,7 @@ class _UserManagementViewState extends State<UserManagementView> {
                 children: [
                   ElevatedButton(
                     onPressed: _saveChanges,
-                    child: Text('Save Changes'),
+                    child: Text('Save Changes'),  // TODO: Fix dropdown refresh on save and manager password clear
                   ),
                   ElevatedButton(
                     onPressed: () => setState(() => _isPasswordChange = !_isPasswordChange),
@@ -336,4 +359,204 @@ class _UserManagementViewState extends State<UserManagementView> {
     super.dispose();
   }
 
+  void _navigateToNewUserView() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NewUserView()),
+    ).then((_) => _refreshUserList()); // Refresh the user list when returning
+  }
+
 }
+
+
+
+class NewUserView extends StatefulWidget {
+  @override
+  _NewUserViewState createState() => _NewUserViewState();
+}
+
+class _NewUserViewState extends State<NewUserView> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surnameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _confirmEmailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Create New User')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _buildNameField(),
+              _buildSurnameField(),
+              _buildEmailField(),
+              _buildConfirmEmailField(),
+              _buildPhoneField(),
+              _buildPasswordField(),
+              _buildConfirmPasswordField(),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _createUser,
+                child: const Text('Create'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameField() {
+    return TextFormField(
+      controller: _nameController,
+      decoration: const InputDecoration(labelText: 'Name'),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a name';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildSurnameField() {
+    return TextFormField(
+      controller: _surnameController,
+      decoration: const InputDecoration(labelText: 'Surname'),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a surname';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildEmailField() {
+    return TextFormField(
+      controller: _emailController,
+      decoration: const InputDecoration(labelText: 'Email'),
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter an email';
+        }
+        if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+          return 'Please enter a valid email address';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildConfirmEmailField() {
+    return TextFormField(
+      controller: _confirmEmailController,
+      decoration: const InputDecoration(labelText: 'Confirm Email'),
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value != _emailController.text) {
+          return 'Email addresses do not match';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPhoneField() {
+    return TextFormField(
+      controller: _phoneController,
+      decoration: const InputDecoration(labelText: 'Phone'),
+      keyboardType: TextInputType.phone,
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a phone number';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      decoration: const InputDecoration(labelText: 'Password'),
+      obscureText: true,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a password';
+        }
+        if (value.length < 8) {
+          return 'Password must be at least 8 characters';
+        }
+        if (!RegExp(r'\d').hasMatch(value) || !RegExp(r'[A-Za-z]').hasMatch(value)) {
+          return 'Password must contain at least one number and one letter';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return TextFormField(
+      controller: _confirmPasswordController,
+      decoration: const InputDecoration(labelText: 'Confirm Password'),
+      obscureText: true,
+      validator: (value) {
+        if (value != _passwordController.text) {
+          return 'Passwords do not match';
+        }
+        return null;
+      },
+    );
+  }
+
+  void _createUser() async {
+    if (_formKey.currentState!.validate()) {
+      final result = await UsersService.registerUser(
+        name: _nameController.text,
+        surname: _surnameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        password: _passwordController.text,
+      );
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+        // Navigate back to UserManagementView after successful creation
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _surnameController.dispose();
+    _emailController.dispose();
+    _confirmEmailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+
+}
+

@@ -4,6 +4,7 @@ import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'create_reservation_view.dart';
 import 'models.dart';
@@ -376,7 +377,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           context: context,
           builder: (BuildContext context) {
             return FractionallySizedBox(
-              heightFactor: 0.8, // Adjust this value as needed (0.8 = 80% of screen height)
+              heightFactor: 1.2, // Adjust this value as needed (0.8 = 80% of screen height)
               child: buildReservationDetailsModal(arrivingReservation!, guest),
             );
           },
@@ -402,11 +403,9 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   Color? getCellColor(int roomId, DateTime date) {
-
     List<Reservation> todayReservations = reservations
         .where((res) => res.roomId == roomId && res.startDate.isBefore(date) && res.endDate.isAfter(date.subtract(Duration(days: 1))))
         .toList();
-
 
     if (todayReservations.isNotEmpty) {
       // Check for changes in reservations (check-in, check-out, stay, or change of guest)
@@ -415,7 +414,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       } else if (isSameDate(todayReservations[0].startDate, date)) {
         return Colors.lightBlueAccent; // Guest is arriving today, use light green
       } else {
-        return Colors.lightBlue[200]; // Guest is in room, use light green
+        return Colors.lightBlue[200]; // Guest is in room, use the calculated color
       }
     }
 
@@ -509,80 +508,161 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
   Widget buildReservationDetailsModal(Reservation reservation, Guest guest) {
+
     // State to hold the new selected status
     String newStatus = reservation.status ?? 'Pending';
 
+    // Fetch the creation log for the reservation
+    Future<Map<String, dynamic>> fetchCreationLogAndUser() async {
+      var logs = await LogService.fetchLogs(
+          action: "Reservation Add",
+          details: "Reservation Id: ${reservation.id}"
+      );
+
+
+      if (logs.isNotEmpty) {
+        var log = logs.first;
+        var user = await UsersService.getUser(log['user_id']);
+        print("USER: " + user.id.toString());
+        print(log['timestamp']);
+        return {
+          'timestamp': log['timestamp'],
+          'user': user,
+        };
+      }
+      return {};
+    }
+
+    // Fetch the last reservation status change and the user who changed it
+    Future<Map<String, dynamic>> fetchLastStatusChangeAndUser() async {
+      var statusChanges = await ReservationService.getReservationStatusChangeByReservation(reservation.id);
+      if (statusChanges.isNotEmpty) {
+        var lastStatusChange = statusChanges.last;
+        var user = await UsersService.getUser(lastStatusChange.userId);
+        print("USER CHANGED: " + user.id.toString());
+        print("AT: " + lastStatusChange.timestamp.toIso8601String());
+        return {
+          'timestamp': lastStatusChange.timestamp,
+          'user': user,
+        };
+      }
+      return {};
+    }
+
+    String formatTimestamp(DateTime dateTime) {
+      return DateFormat('yyyy-MM-dd – kk:mm').format(dateTime);
+    }
+
+
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-        return AlertDialog(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Reservation Details"),
-              if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => confirmAndDeleteReservation(context, reservation.id),
-                ),
-            ],
-          ),
-          content: Container(
-            width: double.maxFinite,
-            //constraints: const BoxConstraints(maxWidth: 6000),
-            child: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  const SizedBox(height: 10),
-                  Text("Guest Name: ${guest.name} ${guest.surname ?? ''}"),
-                  Text("Email: ${guest.email}"),
-                  Text("Phone: ${guest.phone}"),
-                  Text("Check-in Date: ${formatDate(reservation.startDate)}"),
-                  Text("Check-out Date: ${formatDate(reservation.endDate)}"),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Status Picker Dropdown
-                      Expanded(
-                        child: DropdownButton<String>(
-                          isExpanded: true,
-                          value: newStatus,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              newStatus = newValue!;
-                            });
-                          },
-                          items: <String>['Pending', 'Checked-in', 'Checked-out']
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      // Save Button
-                      const SizedBox(width: 50), // Add some space between the dropdown and the button
-                      IconButton(
-                        icon: const Icon(Icons.save),
-                        onPressed: newStatus != reservation.status ? () async {
-                          await ReservationService.changeReservationStatus(reservationId: reservation.id, newStatus: newStatus);
-                          Navigator.pop(context);
-                          fetchData();
-                          // Close the modal after saving
-                        } : null, // Disable button if status is unchanged
-                        style: ElevatedButton.styleFrom(
-                          primary: newStatus != reservation.status ? Colors.blue : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
+        return Container(
+            height: MediaQuery.of(context).size.height * 1, // 80% of screen height
+            child: AlertDialog(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Reservation Details"),
+                  if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => confirmAndDeleteReservation(context, reservation.id),
+                    ),
                 ],
               ),
+              content: FutureBuilder(
+                future: Future.wait([fetchCreationLogAndUser(), fetchLastStatusChangeAndUser()]),
+                builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text("Error: ${snapshot.error}");
+                  } else {
+                    var creationData = snapshot.data![0];
+                    var lastChangeData = snapshot.data![1];
+                    var creationUser = creationData['user'] as User?;
+                    var lastChangeUser = lastChangeData['user'] as User?;
+
+                    return Container(
+                      width: double.maxFinite,
+                      child: SingleChildScrollView(
+                        child: ListBody(
+                          children: <Widget>[
+                            const SizedBox(height: 10),
+                            Text("Guest Name: ${guest.name} ${guest.surname ?? ''}"),
+                            Text("Email: ${guest.email}"),
+                            Text("Phone: ${guest.phone}"),
+                            Text("Check-in Date: ${formatDate(reservation.startDate)}"),
+                            Text("Check-out Date: ${formatDate(reservation.endDate)}"),
+                            if (creationUser != null && creationData['timestamp'] != null) ...[
+                              Text("Date Created: ${DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.parse(creationData['timestamp']))}"),
+                              Text("Created by: ${creationUser.name} ${creationUser.surname}"),
+                            ],
+                            if (lastChangeUser != null && lastChangeData['timestamp'] != null) ...[
+                              Text("Last Status Change: ${formatTimestamp(lastChangeData['timestamp'])}"),
+                              Text("Changed by: ${lastChangeUser.name} ${lastChangeUser.surname}"),
+                            ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Status Picker Dropdown
+                                Expanded(
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    value: newStatus,
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        newStatus = newValue!;
+                                      });
+                                    },
+                                    items: <String>['Pending', 'Checked-in', 'Checked-out']
+                                        .map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                                // Save Button
+                                const SizedBox(width: 50), // Add some space between the dropdown and the button
+                                IconButton(
+                                  icon: const Icon(Icons.save),
+                                  onPressed: newStatus != reservation.status ? () async {
+                                    await ReservationService.changeReservationStatus(reservationId: reservation.id, newStatus: newStatus);
+                                    Navigator.pop(context);
+                                    fetchData();
+                                    // Close the modal after saving
+                                  } : null, // Disable button if status is unchanged
+                                  style: ElevatedButton.styleFrom(
+                                    primary: newStatus != reservation.status ? Colors.blue : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
-          ),
         );
       },
     );
+  }
+
+// Utility function to format DateTime
+  String formatDateTime(DateTime dateTime) {
+    // Format the dateTime as needed
+    return DateFormat('yyyy-MM-dd – kk:mm').format(dateTime);
+  }
+
+  // Utility function to parse and format DateTime from String
+  String formatDateTimeFromString(String dateTimeString) {
+    DateTime dateTime = DateTime.parse(dateTimeString);
+    return DateFormat('yyyy-MM-dd – kk:mm').format(dateTime);
   }
 
 
