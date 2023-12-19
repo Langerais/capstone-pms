@@ -163,7 +163,7 @@ class _UserManagementViewState extends State<UserManagementView> {
     );
 
     _managerPasswordController.clear(); //TODO: Fix dropdown refresh on save and manager password clear
-
+    _refreshUserList(); // TODO: FIX THIS
     // Refresh the user list
     await _initializeView();
   }

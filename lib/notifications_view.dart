@@ -140,7 +140,7 @@ class _NotificationsViewState extends State<NotificationsView> {
           final notification = filteredNotifications[index];
 
           bool isAlert = notification.title.startsWith('ALERT') || notification.title.startsWith('UNPAID');
-          bool isAttention = notification.title.startsWith('ATTENTION') || notification.title.startsWith('Expected Arrival');
+          bool isAttention = notification.title.startsWith('ATTENTION') || notification.title.startsWith('Expected Arrival') || notification.title.startsWith('REQUIRED');
           bool isReminder = notification.title.startsWith('Reminder:') || notification.title.startsWith('Expected Departure');
 
           return ListTile(
