@@ -385,7 +385,7 @@ class _UserProfileViewState extends State<UserProfileView> {
           );
         }
 
-        currentUser = await UsersService.getUser(currentUser!.id);
+        //currentUser = await UsersService.getUser(currentUser!.id);
 
         // Reset the state to reflect changes
         setState(() {

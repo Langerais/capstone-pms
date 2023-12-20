@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'authentication.dart';
 import 'db_helper.dart';
 import 'drawer_menu.dart';
@@ -181,7 +182,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            subtitle: Text(notification.message),
+            subtitle: Text("${notification.message} - Expires: ${DateFormat('yyyy-MM-dd HH:mm').format(notification.expiryDate)}")
           );
         },
       ),

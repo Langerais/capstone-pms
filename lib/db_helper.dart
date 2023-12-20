@@ -1129,7 +1129,14 @@ class UsersService {
 
   static Future<User> getUser(int userId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/get_user/$userId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       return User.fromJson(jsonDecode(response.body));

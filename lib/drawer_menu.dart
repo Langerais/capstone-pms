@@ -52,7 +52,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     Container(
       child: ListTile(
-        leading: const Icon(Icons.home),
+        leading: const Icon(Icons.notifications),
         title: const Text('Notifications'),
         onTap: () {
           Navigator.push(

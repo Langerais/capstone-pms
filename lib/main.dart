@@ -1,3 +1,17 @@
+/*
+Developer: Samuil Shintel 228487
+Supervisor: Prof. Ioannis Vetsikas
+Deree – The American College of Greece
+Fall Semester 2023
+*/
+
+import 'dart:async';
+import 'package:capstone_pms/billing_view.dart';
+import 'package:capstone_pms/profile_view.dart';
+import 'package:capstone_pms/user_management_view.dart';
+import 'package:flutter/material.dart';
+import 'package:capstone_pms/authentication.dart';
+
 import 'dart:async';
 import 'package:capstone_pms/billing_view.dart';
 import 'package:capstone_pms/profile_view.dart';
