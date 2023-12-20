@@ -37,10 +37,11 @@ class _UserManagementViewState extends State<UserManagementView> {
     try {
       List<User> users = await UsersService.getUsers();
       _currentUser = await Auth.getCurrentUser();
-      print('Current user: ${_currentUser?.name} ${_currentUser?.surname}');
+      //print('Current user: ${_currentUser?.name} ${_currentUser?.surname}');
 
       setState(() {
         _users = users.where((user) => user.id != _currentUser?.id).toList();
+        _users.sort((a, b) => a.department.compareTo(b.department));
         _selectedUser = _users.isNotEmpty ? _users.first : null;
         _updateControllers();
       });
@@ -52,6 +53,7 @@ class _UserManagementViewState extends State<UserManagementView> {
   void _refreshUserList() async {
     try {
       List<User> users = await UsersService.getUsers();
+      users.sort((a, b) => a.department.compareTo(b.department));
       setState(() {
         _users = users;
         // You may need to reset _selectedUser or other related states as well
@@ -172,7 +174,7 @@ class _UserManagementViewState extends State<UserManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Management'),
+        title: const Text('User Management'),
         actions: [
           IconButton(
             icon: Icon(Icons.add),
@@ -180,13 +182,31 @@ class _UserManagementViewState extends State<UserManagementView> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],
-        ),
+      drawer: FutureBuilder<UserGroup>(
+        future: Auth.getUserRole(),  // Get the current user's role
+        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting, show a progress indicator
+            return Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            // If there's an error, show an error message
+            return Drawer(
+              child: Center(child: Text('Error: ${snapshot.error}')),
+            );
+          } else {
+            // Once data is available, build the drawer
+            return Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                ],
+              ),
+            );
+          }
+        },
       ),
 
       body: SingleChildScrollView(

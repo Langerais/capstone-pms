@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'config.dart';
 import 'db_helper.dart';
 import 'models.dart';
+
 
 
 class GuestsListView extends StatefulWidget {
@@ -26,7 +28,7 @@ class _GuestsListViewState extends State<GuestsListView> {
 
   void startRefreshTimer() {
     refreshTimer?.cancel();
-    const refreshInterval = Duration(seconds: REFRESH_TIMER);
+    const refreshInterval = Duration(seconds: AppConfig.REFRESH_TIMER);
     refreshTimer = Timer.periodic(refreshInterval, (Timer t) => _fetchGuests());
   }
 

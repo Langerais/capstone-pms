@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'authentication.dart';
+import 'login_view.dart';
 import 'notifications_view.dart';
 
 
@@ -232,12 +233,21 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     ),
   );
 
+  // Logout menu item
   drawerItems.add(
     ListTile(
       leading: Icon(Icons.logout),
-      title: Text('Logout / TBD'),
-      onTap: () {
-        // Navigate to Logout
+      title: Text('Logout'),
+      onTap: () async {
+        // Clear the stored JWT token
+        await CrossPlatformTokenStorage.clearToken();
+
+        // Navigate to the Login screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => LoginView()),
+              (Route<dynamic> route) => false, // Remove all routes below the LoginView
+        );
       },
     ),
   );

@@ -45,49 +45,72 @@ class _CleaningScheduleViewState extends State<CleaningView> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the user role for conditional rendering.
-    UserGroup userRole = Auth.getUserRole();
+    return FutureBuilder<UserGroup>(
+      future: Auth.getUserRole(), // Get the current user's role
+      builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While waiting, show a progress indicator
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Cleaning Schedule'),
+            ),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasError) {
+          // If there's an error, show an error message
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Cleaning Schedule'),
+            ),
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        } else {
+          // Once the user role is available, build the UI
+          UserGroup userRole = snapshot.data!;
 
-    /// Builds action buttons for the AppBar based on user role.
-    List<Widget> buildAppBarActions() {
-      List<Widget> actions = [];
-      if (userRole == UserGroup.Admin || userRole == UserGroup.Manager) {
-        actions.add(
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ManageCleaningActions()),
+          /// Builds action buttons for the AppBar based on user role.
+          List<Widget> buildAppBarActions() {
+            List<Widget> actions = [];
+            if (userRole == UserGroup.Admin || userRole == UserGroup.Manager) {
+              actions.add(
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ManageCleaningActions()),
+                    );
+                  },
+                ),
               );
-            },
-          ),
-        );
-      }
-      return actions;
-    }
+            }
+            return actions;
+          }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cleaning Schedule'),
-        actions: buildAppBarActions(),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],// Your drawer items
-        ),
-      ),
-      body: Column(
-        children: [
-          if (kDebugMode) _buildDatePicker(),
-          Expanded(
-            child: _buildCleaningScheduleTable(),
-          ),
-        ],
-      ),
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Cleaning Schedule'),
+              actions: buildAppBarActions(),
+            ),
+            drawer: Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(userRole, context), // Generate items for User
+                ],
+              ),
+            ),
+            body: Column(
+              children: [
+                if (kDebugMode) _buildDatePicker(),
+                Expanded(
+                  child: _buildCleaningScheduleTable(),
+                ),
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 

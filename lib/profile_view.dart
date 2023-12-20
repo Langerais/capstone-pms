@@ -67,7 +67,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     super.initState();
     Auth.getCurrentUser().then((user) {
       setState(() {
-        emailController.text = user.email;
+        emailController.text = user!.email;
         phoneController.text = user.phone;
         currentUser = user;
         _isFormModified = false;
@@ -88,17 +88,36 @@ class _UserProfileViewState extends State<UserProfileView> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],
-        ),
+      drawer: FutureBuilder<UserGroup>(
+        future: Auth.getUserRole(),  // Get the current user's role
+        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting, show a progress indicator
+            return Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            // If there's an error, show an error message
+            return Drawer(
+              child: Center(child: Text('Error: ${snapshot.error}')),
+            );
+          } else {
+            // Once data is available, build the drawer
+            return Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                ],
+              ),
+            );
+          }
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -361,7 +380,6 @@ class _UserProfileViewState extends State<UserProfileView> {
         // Check if the password is being changed
         if (isChangingPassword) {
           await UsersService.changePassword(
-            currentUser!.id,
             currentPasswordController.text,
             newPasswordController.text,
           );
@@ -418,7 +436,7 @@ class _UserProfileViewState extends State<UserProfileView> {
 
         newPasswordController.clear();
         confirmNewPasswordController.clear();
-        emailController.text = user.email;
+        emailController.text = user!.email;
         phoneController.text = user.phone;
         confirmEmailController.clear();
         confirmPhoneController.clear();

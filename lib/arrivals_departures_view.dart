@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'config.dart';
 import 'create_reservation_view.dart';
 import 'models.dart';
 import 'db_helper.dart';
@@ -25,7 +26,6 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => CreateReservationView(
           onReservationCreated: () {
-
           },
         ),
       ),
@@ -39,7 +39,7 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Arrivals/Departures'),
+        title: const Text('Arrivals/Departures'),
         actions: <Widget>[
           SizedBox(
             width: 60,
@@ -51,24 +51,33 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],
-        ),
+      drawer: FutureBuilder<UserGroup>(
+        future: Auth.getUserRole(),  // Get the current user's role
+        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting, show a progress indicator
+            return Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            // If there's an error, show an error message
+            return Drawer(
+              child: Center(child: Text('Error: ${snapshot.error}')),
+            );
+          } else {
+            // Once data is available, build the drawer
+            return Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                ],
+              ),
+            );
+          }
+        },
       ),
       body: ArrivalsDeparturesTable(key: _tableKey),
-    floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Open AI Chat
-          print('AI Chat Button Pressed');
-          // You might want to navigate to a new screen or open a dialog
-        },
-        backgroundColor: Colors.blue,
-        child: Icon(Icons.chat),
-      ),
     );
   }
 }
@@ -103,11 +112,8 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       DateTime previousWeekStart = currentWeekStart.subtract(const Duration(days: 7));
       DateTime nextWeekEnd = currentWeekStart.add(const Duration(days: 14));
       reservations = await ReservationService.getReservationsByDateRange(previousWeekStart, nextWeekEnd);
-
       rooms = await RoomService.getRooms();
-
       guests = await GuestService.getGuests();
-
 
     } catch (e) {
       if (kDebugMode) {
@@ -118,16 +124,15 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     }
   }
 
+  // Utility function to get the Monday of the selected week
   DateTime getMondayOfSelectedWeek(DateTime date) {
     DateTime weekStart = date.subtract(Duration(days: date.weekday - 1));
     weekStart = weekStart.add(const Duration(seconds: 1)); // Needed to avoid cells coloring bug
     return weekStart;
   }
 
-
   @override
   Widget build(BuildContext context) {
-
 
     if (isLoading) { return const Center(child: CircularProgressIndicator()); }
 
@@ -152,7 +157,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   setState(() {
-                    currentWeekStart = currentWeekStart.subtract(Duration(days: 7));
+                    currentWeekStart = currentWeekStart.subtract(const Duration(days: 7));
                     fetchData();
                   });
                 },
@@ -184,12 +189,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                   });
                 },
               ),
+              // Button to go to today's date
               ElevatedButton(
                 onPressed: () {
                   setState(() {
                     currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
                     fetchData();
-                    print("TODAY: " + currentWeekStart.toString());
                   });
                 },
                 child: const Text('TODAY'),
@@ -205,7 +210,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           color: Colors.grey[500], // Background color
                           border: const Border(
@@ -235,12 +240,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                       ),
                   ],
                 ),
-                // Thin row under the date with day names
+                // The row under the date with day names
                 Row(
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           color: Colors.grey[500], // Background color
                           border: const Border(
@@ -282,13 +287,13 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
             itemBuilder: (BuildContext context, int index) {
               Room room = rooms[index];
 
-              return IntrinsicHeight( // Wrap Row in an IntrinsicHeight widget
+              return IntrinsicHeight(
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch, // Align children vertically
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           color: Colors.grey[500], // Background color
                           border: const Border(
@@ -314,25 +319,25 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     );
   }
 
+  // Build a cell for a reservation
   Widget buildReservationCell(int roomId, DateTime date) {
     return FutureBuilder<String>(
       future: getLeavingGuest(roomId, date),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             color: getCellColor(roomId, date),
-            child: Center(child: CircularProgressIndicator()),
+            child: const Center(child: CircularProgressIndicator()),
           );
         } else {
           return GestureDetector(
             onTap: () => onCellTap(roomId, date),
             child: Container(
-              padding: EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: getCellColor(roomId, date),
                 border: const Border(
-                  //right: BorderSide(width: 1.0, color: Colors.black), // Right border
                   bottom: BorderSide(width: 0.2, color: Colors.black), // Bottom border
                 ),
               ),
@@ -364,7 +369,6 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
         // If there is only one reservation for the room on the selected date, use it
         arrivingReservation = relevantReservations[0];
       }
-
     }
 
 
@@ -377,7 +381,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           context: context,
           builder: (BuildContext context) {
             return FractionallySizedBox(
-              heightFactor: 1.2, // Adjust this value as needed (0.8 = 80% of screen height)
+              heightFactor: 1.2,
               child: buildReservationDetailsModal(arrivingReservation!, guest),
             );
           },
@@ -388,15 +392,17 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   }
 
 
-
+  // Utility function to check if two DateTime objects are the same date
   bool isSameDate(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  // Utility function to format DateTime
   String formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year % 100}';
   }
 
+  // Utility function to get the day name from DateTime
   String formatDayName(DateTime date) {
     List<String> daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return daysOfWeek[date.weekday - 1];
@@ -421,10 +427,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     return Colors.white; // Room available
   }
 
+  // Refresh the data every 5 minutes
   void startRefreshTimer() {
     cancelRefreshTimer();
     if (refreshTimer == null || !refreshTimer!.isActive) {
-      const refreshInterval = Duration(seconds: REFRESH_TIMER); // Set your desired interval
+      const refreshInterval = Duration(seconds: AppConfig.REFRESH_TIMER); // Set your desired interval
       refreshTimer = Timer.periodic(refreshInterval, (Timer t) => fetchData());
     }
   }

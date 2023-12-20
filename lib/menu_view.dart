@@ -24,7 +24,6 @@ class _MenuViewState extends State<MenuView> {
   @override
   void initState() {
     super.initState();
-    UserGroup userGroup = Auth.getUserRole(); //Debug Role TODO : Remove
     _categories = MenuCategoryService.getMenuCategories();
   }
 
@@ -34,13 +33,31 @@ class _MenuViewState extends State<MenuView> {
       appBar: AppBar(
         title: Text('Arrivals/Departures'),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],
-        ),
+      drawer: FutureBuilder<UserGroup>(
+        future: Auth.getUserRole(),  // Get the current user's role
+        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting, show a progress indicator
+            return Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            // If there's an error, show an error message
+            return Drawer(
+              child: Center(child: Text('Error: ${snapshot.error}')),
+            );
+          } else {
+            // Once data is available, build the drawer
+            return Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                ],
+              ),
+            );
+          }
+        },
       ),
       body: FutureBuilder<List<MenuCategory>>(
         future: _categories,

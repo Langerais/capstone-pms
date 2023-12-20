@@ -9,6 +9,8 @@ import 'drawer_menu.dart';
 import 'models.dart';
 import 'package:http/http.dart' as http;
 
+// TODO: Refresh view every minute
+
 class NotificationsView extends StatefulWidget {
   const NotificationsView({Key? key}) : super(key: key);
 
@@ -56,7 +58,7 @@ class _NotificationsViewState extends State<NotificationsView> {
   _fetchNotifications() async {
     try {
       var notificationsList = await AppNotificationsService.getAppNotificationsByDepartment(
-          Auth.getUserRole().name
+          Auth.getUserRole().toString().split('.').last
       );
 
       // Sort notifications by priority and then by time to live
@@ -117,6 +119,7 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
 
         actions: <Widget>[
+
           if(Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
             IconButton(
               icon: const Icon(Icons.edit),
@@ -126,13 +129,31 @@ class _NotificationsViewState extends State<NotificationsView> {
             ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            ...getDrawerItems(Auth.getUserRole(), context), //Generate items for User
-          ],
-        ),
+      drawer: FutureBuilder<UserGroup>(
+        future: Auth.getUserRole(),  // Get the current user's role
+        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // While waiting, show a progress indicator
+            return Drawer(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            // If there's an error, show an error message
+            return Drawer(
+              child: Center(child: Text('Error: ${snapshot.error}')),
+            );
+          } else {
+            // Once data is available, build the drawer
+            return Drawer(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                ],
+              ),
+            );
+          }
+        },
       ),
       body: ListView.builder(
         itemCount: filteredNotifications.length,
@@ -167,7 +188,6 @@ class _NotificationsViewState extends State<NotificationsView> {
     String selectedPrefix = ' ';
     String notificationTitle = '';
     String notificationMessage = '';
-    List<int> priorityItems = [1, 2, 3, 4, 5];
 
 
     showDialog(

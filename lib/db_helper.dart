@@ -3,18 +3,24 @@ import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
+import 'authentication.dart';
 import 'models.dart';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
-// TODO: Save URL in a config file
-const _baseUrl = 'http://16.16.140.209:5000';  //TODO: Move to config file
-const REFRESH_TIMER = 600;  // Refresh db every X seconds TODO: Move to config file
-const _timezoneDefault = 'Europe/Athens'; // Default to Athens timezone TODO: Move to config file
 
 class ReservationService {
   static Future<List<Reservation>> getReservations() async {
-    var url = Uri.parse('$_baseUrl/reservations/get_reservations');
-    var response = await http.get(url);
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/get_reservations');
+    final token = await CrossPlatformTokenStorage.getToken();
+
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -26,29 +32,41 @@ class ReservationService {
 
   static Future<List<Reservation>> getReservationsForGuest(Guest guest) async {
     var url = Uri.parse(
-        '$_baseUrl/reservations/get_guest_reservations/${guest
-            .id}');
-    var response = await http.get(url);
+        '${AppConfig.BASE_URL}/reservations/get_guest_reservations/${guest.id}');
+    final token = await CrossPlatformTokenStorage.getToken();
+
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => Reservation.fromJson(json)).toList();
     } else {
       throw Exception(
-          'Failed to load reservations for guest ${guest.name} ${guest
-              .surname}');
+          'Failed to load reservations for guest ${guest.name} ${guest.surname}');
     }
   }
 
-
   static Future<List<Reservation>> getReservationsByDateRange(DateTime startDate, DateTime endDate) async {
-    var url = Uri.parse('$_baseUrl/reservations/get_reservations_by_date_range')
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/get_reservations_by_date_range')
         .replace(queryParameters: {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
     });
+    final token = await CrossPlatformTokenStorage.getToken();
 
-    var response = await http.get(url);
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -59,14 +77,21 @@ class ReservationService {
   }
 
   static Future<List<Reservation>> getReservationsByRoomAndDateRange(DateTime startDate, DateTime endDate, int roomId) async {
-    var url = Uri.parse('$_baseUrl/reservations/get_reservations_by_room_and_date_range')
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/get_reservations_by_room_and_date_range')
         .replace(queryParameters: {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
       'room_id': roomId.toString(),
     });
+    final token = await CrossPlatformTokenStorage.getToken();
 
-    var response = await http.get(url);
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -83,10 +108,15 @@ class ReservationService {
     required int guestId,
     required double dueAmount,
   }) async {
-    var url = Uri.parse('$_baseUrl/reservations/add_reservation');
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/add_reservation');
+    final token = await CrossPlatformTokenStorage.getToken();
+
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
@@ -104,10 +134,15 @@ class ReservationService {
   static Future<void> deleteReservation({
     required int reservationId,
   }) async {
-    var url = Uri.parse('$_baseUrl/reservations/delete_reservation/$reservationId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/delete_reservation/$reservationId');
+    final token = await CrossPlatformTokenStorage.getToken();
+
     var response = await http.delete(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
     );
 
     if (response.statusCode != 200) {
@@ -119,10 +154,15 @@ class ReservationService {
     required int reservationId,
     required String newStatus,
   }) async {
-    var url = Uri.parse('$_baseUrl/reservations/change_reservation_status/$reservationId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/change_reservation_status/$reservationId');
+    final token = await CrossPlatformTokenStorage.getToken();
+
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'status': newStatus,
       }),
@@ -134,8 +174,16 @@ class ReservationService {
   }
 
   static Future<List<ReservationStatusChange>> getAllReservationStatusChanges() async {
-    final url = Uri.parse('$_baseUrl/reservations/get_reservation_status_changes');
-    final response = await http.get(url);
+    final url = Uri.parse('${AppConfig.BASE_URL}/reservations/get_reservation_status_changes');
+    final token = await CrossPlatformTokenStorage.getToken();
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(response.body);
@@ -146,8 +194,16 @@ class ReservationService {
   }
 
   static Future<List<ReservationStatusChange>> getReservationStatusChangeByReservation(int reservationId) async {
-    final url = Uri.parse('$_baseUrl/reservations/get_reservation_status_changes/$reservationId');
-    final response = await http.get(url);
+    final url = Uri.parse('${AppConfig.BASE_URL}/reservations/get_reservation_status_changes/$reservationId');
+    final token = await CrossPlatformTokenStorage.getToken();
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(response.body);
@@ -156,7 +212,6 @@ class ReservationService {
       throw Exception('Failed to load reservation status change');
     }
   }
-
 }
 
 class GuestService {
@@ -168,7 +223,7 @@ class GuestService {
     required String phone,
     required String email,
   }) async {
-    var url = Uri.parse('$_baseUrl/guests/add_guest');
+    var url = Uri.parse('${AppConfig.BASE_URL}/guests/add_guest');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -190,7 +245,7 @@ class GuestService {
   }
 
   static Future<List<Guest>> getGuests() async {
-    var url = Uri.parse('$_baseUrl/guests/get_guests');
+    var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guests');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -206,7 +261,7 @@ class GuestService {
 
 
   static Future<Guest> getGuest(int guestId) async {
-    var url = Uri.parse('$_baseUrl/guests/get_guest/$guestId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guest/$guestId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       return Guest.fromJson(jsonDecode(response.body));
@@ -217,7 +272,7 @@ class GuestService {
 
 
   static Future<List<Guest>> getGuestsByIds(List<int> guestIds) async {
-    var url = Uri.parse('$_baseUrl/guests/get_guests_by_ids');
+    var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guests_by_ids');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -243,7 +298,7 @@ class GuestService {
 
 
   static Future<Guest?> findGuestByEmailOrPhone(String email, String phone) async {
-    var url = Uri.parse('$_baseUrl/guests/find_guest');
+    var url = Uri.parse('${AppConfig.BASE_URL}/guests/find_guest');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -261,7 +316,7 @@ class GuestService {
 
 class RoomService {
   static Future<List<Room>> getRooms() async {
-    var url = Uri.parse('$_baseUrl/rooms/get_rooms');
+    var url = Uri.parse('${AppConfig.BASE_URL}/rooms/get_rooms');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -278,7 +333,7 @@ class RoomService {
   }
 
   static Future<Room> getRoom(int roomId) async {
-    var url = Uri.parse('$_baseUrl/rooms/get_room/$roomId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/rooms/get_room/$roomId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       return Room.fromJson(jsonDecode(response.body));
@@ -318,7 +373,7 @@ DateTime? parseDate(String dateString) {
 
 class MenuCategoryService {
   static Future<List<MenuCategory>> getMenuCategories() async {
-    var url = Uri.parse('$_baseUrl/menu/get_categories');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_categories');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -332,7 +387,7 @@ class MenuCategoryService {
 
 class MenuService {
   static Future<MenuItem> getMenuItem(int itemId) async {
-    var url = Uri.parse('$_baseUrl/menu/get_item/$itemId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_item/$itemId');
     var response = await http.get(url);
     print(MenuItem.fromJson(jsonDecode(response.body)));
     if (response.statusCode == 200) {
@@ -343,7 +398,7 @@ class MenuService {
   }
 
   static Future<List<MenuItem>> getMenuItemsByCategory(int categoryId) async {
-    var url = Uri.parse('$_baseUrl/menu/get_items_by_category/$categoryId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_items_by_category/$categoryId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -354,7 +409,7 @@ class MenuService {
   }
 
   static Future<void> addMenuItem(String name, int categoryId, String description, double price) async {
-    var url = Uri.parse('$_baseUrl/menu/create_item');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_item');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -371,7 +426,7 @@ class MenuService {
   }
 
   static Future<void> updateMenuItem(int itemId, String name, int categoryId, String description, double price) async {
-    var url = Uri.parse('$_baseUrl/menu/modify_item/$itemId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/modify_item/$itemId');
     var response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
@@ -388,7 +443,7 @@ class MenuService {
   }
 
   static Future<void> deleteMenuItem(int itemId) async {
-    var url = Uri.parse('$_baseUrl/menu/remove_item/$itemId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/remove_item/$itemId');
     var response = await http.delete(url);
     if (response.statusCode != 200) {
       throw Exception('Failed to delete menu item');
@@ -401,7 +456,7 @@ class MenuService {
 class BalanceService {
 
   static Future<BalanceEntry> createBalanceEntry(int reservationId, int menuItemId, double amount) async {
-    var url = Uri.parse('$_baseUrl/menu/create_balance_entry');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_balance_entry');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -419,7 +474,7 @@ class BalanceService {
   }
 
   static Future<void> addOrder(int reservationId, int menuItemId, int quantity, double pricePerItem) async {
-    var url = Uri.parse('$_baseUrl/menu/create_balance_entry');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_balance_entry');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -437,7 +492,7 @@ class BalanceService {
 
 
   static Future<void> addPayment(int reservationId, String paymentMethod, double amount) async {
-    var url = Uri.parse('$_baseUrl/menu/add_payment');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/add_payment');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -454,7 +509,7 @@ class BalanceService {
   }
 
   static Future<bool> deleteBalanceEntry(int balanceEntryId) async {
-    final String url = '$_baseUrl/menu/remove_balance_entry/$balanceEntryId';
+    final String url = '${AppConfig.BASE_URL}/menu/remove_balance_entry/$balanceEntryId';
 
     try {
       final response = await http.delete(Uri.parse(url));
@@ -485,7 +540,7 @@ class BalanceService {
   }
 
   static Future<List<BalanceEntry>> getBalanceEntriesForReservation(int reservationId) async {
-    var url = Uri.parse('$_baseUrl/menu/get_balance_entries/$reservationId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_balance_entries/$reservationId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -499,7 +554,7 @@ class BalanceService {
 
 
   static Future<double> calculateUnpaidAmount(int reservationId) async {
-    var url = Uri.parse('$_baseUrl/reservations/calculate_unpaid_amount/$reservationId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/reservations/calculate_unpaid_amount/$reservationId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
@@ -514,7 +569,7 @@ class BalanceService {
 
 class CleaningService {
   static Future<List<CleaningSchedule>> getRoomCleaningSchedule(int roomId, DateTime startDate, DateTime endDate) async {
-    var url = Uri.parse('$_baseUrl/cleaning_management/get_cleaning_schedule/room/$roomId/date_range')
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/get_cleaning_schedule/room/$roomId/date_range')
         .replace(queryParameters: {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
@@ -531,7 +586,7 @@ class CleaningService {
   }
 
   static Future<List<CleaningAction>> getCleaningActions() async {
-    var url = Uri.parse('$_baseUrl/cleaning_management/get_cleaning_actions');
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/get_cleaning_actions');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -545,7 +600,7 @@ class CleaningService {
 
 
   static Future<CleaningAction> getCleaningAction(int actionId) async {
-    var url = Uri.parse('$_baseUrl/cleaning_management/get_cleaning_action/$actionId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/get_cleaning_action/$actionId');
     var response = await http.get(url);
     print(CleaningAction.fromJson(jsonDecode(response.body)));
     if (response.statusCode == 200) {
@@ -556,7 +611,7 @@ class CleaningService {
   }
 
   static Future<void> scheduleCleaning(DateTime startDate) async {
-    var url = Uri.parse('$_baseUrl/cleaning_management/schedule_cleaning');
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/schedule_cleaning');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -572,7 +627,7 @@ class CleaningService {
   }
 
   static Future<void> toggleCleaningTaskStatus(int scheduleId, String newStatus, String completedDate) async {
-    var url = Uri.parse('$_baseUrl/cleaning_management/toggle_task_status/$scheduleId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/toggle_task_status/$scheduleId');
 
     //DateTime completed = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
     //String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
@@ -592,7 +647,7 @@ class CleaningService {
 
   static Future<bool> createCleaningAction(String actionName, int frequencyDays) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/cleaning_management/create_cleaning_action'),
+      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/create_cleaning_action'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -606,7 +661,7 @@ class CleaningService {
 
   static Future<bool> updateCleaningAction(int actionId, String actionName, int frequency) async {
     final response = await http.put(
-      Uri.parse('$_baseUrl/cleaning_management/modify_cleaning_action/$actionId'),
+      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/modify_cleaning_action/$actionId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -622,7 +677,7 @@ class CleaningService {
 
   static Future<bool> deleteCleaningAction(int actionId) async {
     final response = await http.delete(
-      Uri.parse('$_baseUrl/cleaning_management/remove_cleaning_action/$actionId'),
+      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/remove_cleaning_action/$actionId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -636,7 +691,7 @@ class LogService {
 
   // Get all logs
   static Future<List<Log>> getLogs() async {
-    var url = Uri.parse('$_baseUrl/logging/get_logs');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/get_logs');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -647,7 +702,7 @@ class LogService {
   }
 
   static Future<List<String>> getUniqueActions() async {
-    var url = Uri.parse('$_baseUrl/logging/actions');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/actions');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<String> actions = List<String>.from(json.decode(response.body));
@@ -658,7 +713,7 @@ class LogService {
   }
 
   static Future<List<Log>> getLogsForAction(String action) async { // TODO: Implement Endpoint
-    var url = Uri.parse('$_baseUrl/logging/action/$action');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/action/$action');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -672,7 +727,7 @@ class LogService {
 
     String start = startDate.toIso8601String();
     String end = endDate.toIso8601String();
-    var url = Uri.parse('$_baseUrl/logging/date_range/$start/$end');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/date_range/$start/$end');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -684,7 +739,7 @@ class LogService {
 
 
   static Future<List<Log>> getLogsForUser(int userId) async {
-    var url = Uri.parse('$_baseUrl/user/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/user/$userId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -698,7 +753,7 @@ class LogService {
   static Future<List<Log>> getLogsForUserAndDateRange(DateTime startDate, DateTime endDate, int userId) async {
     String start = startDate.toIso8601String();
     String end = endDate.toIso8601String();
-    var url = Uri.parse('$_baseUrl/logging/user/$userId/date_range/$start/$end');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/user/$userId/date_range/$start/$end');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -710,7 +765,7 @@ class LogService {
 
  // Get logs for a specific user, for a specific action
   static Future<List<Log>> getLogsForUserAndAction(String action, int userId) async {
-    var url = Uri.parse('$_baseUrl/logging/user/$action/action/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/logging/user/$action/action/$userId');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
@@ -739,7 +794,7 @@ class LogService {
     // Remove null entries
     queryParams.removeWhere((key, value) => value == null);
 
-    var uri = Uri.parse('$_baseUrl/logging/search_logs').replace(queryParameters: queryParams);
+    var uri = Uri.parse('${AppConfig.BASE_URL}/logging/search_logs').replace(queryParameters: queryParams);
     var response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -761,7 +816,7 @@ class UsersService {
     required String department,
     required String password,
   }) async {
-    var url = Uri.parse('$_baseUrl/user_management/create_user');
+    var url = Uri.parse('${AppConfig.BASE_URL}/user_management/create_user');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -786,7 +841,7 @@ class UsersService {
     required String phone,
     required String password,
   }) async {
-    final url = Uri.parse('$_baseUrl/registration/register'); // Update with your actual server URL
+    final url = Uri.parse('${AppConfig.BASE_URL}/registration/register'); // Update with your actual server URL
 
     final response = await http.post(
       url,
@@ -820,7 +875,7 @@ class UsersService {
     required String email,
     required String department,
   }) async {
-    var url = Uri.parse('$_baseUrl/users/modify_user/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/modify_user/$userId');
     var response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
@@ -838,7 +893,7 @@ class UsersService {
   }
 
   static Future<void> changeDepartment(int userId, String department) async {
-    var url = Uri.parse('$_baseUrl/users/change_department/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/change_department/$userId');
     var response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
@@ -852,7 +907,7 @@ class UsersService {
   }
 
   static Future<User> getUser(int userId) async {
-    var url = Uri.parse('$_baseUrl/users/get_user/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/get_user/$userId');
     var response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -862,9 +917,31 @@ class UsersService {
     }
   }
 
-  static Future<List<User>> getUsers() async {
-    var url = Uri.parse('$_baseUrl/users/get_users');
+  static Future<User> getUserByEmail(String email) async {
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/get_user_by_email/$email');
     var response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      User user = User.fromJson(jsonDecode(response.body));
+      print("User: ${user.name}");
+      return user;
+    } else {
+      throw Exception('Failed to load user');
+    }
+  }
+
+  static Future<List<User>> getUsers() async {
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/get_users');
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    // Handle the response
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => User.fromJson(json)).toList();
@@ -874,7 +951,7 @@ class UsersService {
   }
 
   static Future<List<User>> getUsersByDepartment(String department) async {
-    var url = Uri.parse('$_baseUrl/users/get_users_by_department/$department');
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/get_users_by_department/$department');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -884,8 +961,8 @@ class UsersService {
     }
   }
 
-  static Future<void> changePassword(int userId, String oldPassword, String newPassword) async {
-    var url = Uri.parse('$_baseUrl/users/change_password/$userId');
+  static Future<void> changePassword(String oldPassword, String newPassword) async {
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/change_password/');
     var response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
@@ -903,7 +980,7 @@ class UsersService {
   }
 
   static Future<void> changePasswordManager(int userId, String managerPassword, String newPassword) async {
-    var url = Uri.parse('$_baseUrl/users/change_password_manager/$userId');
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/change_password_manager/$userId');
     var response = await http.put(
       url,
       headers: {"Content-Type": "application/json"},
@@ -921,7 +998,7 @@ class UsersService {
   }
 
   static Future<List<Department>> getAllDepartments() async {
-    final response = await http.get(Uri.parse('$_baseUrl/users/get_all_departments'));
+    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/users/get_all_departments'));
 
     if (response.statusCode == 200) {
       final List<dynamic> departmentJsonList = jsonDecode(response.body);
@@ -943,7 +1020,7 @@ class TimeZoneService {
 
   static Future<String?> fetchTimezone() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/get_timezone'));
+      final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/get_timezone'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _timezone = data['timezone'];
@@ -965,7 +1042,7 @@ class TimeZoneService {
 class AppNotificationsService {
 
   static Future<List<AppNotification>> getAppNotifications() async {
-    final response = await http.get(Uri.parse('$_baseUrl/notifications/get_notifications'));
+    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -976,7 +1053,7 @@ class AppNotificationsService {
   }
 
   static Future<List<AppNotification>> getAppNotificationsByDepartment(String department) async {
-    final response = await http.get(Uri.parse('$_baseUrl/notifications/get_notifications/department/$department'));
+    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications/department/$department'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -989,7 +1066,7 @@ class AppNotificationsService {
 
   static Future<void> createNotification(AppNotification notification) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/notifications/add_notification'),
+      Uri.parse('${AppConfig.BASE_URL}/notifications/add_notification'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
