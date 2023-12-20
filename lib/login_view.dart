@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'authentication.dart';
@@ -37,19 +38,23 @@ class _LoginViewState extends State<LoginView> {
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      // Store the JWT token using CrossPlatformTokenStorage
       await CrossPlatformTokenStorage.storeToken(data['access_token']);
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(data['access_token']);
+      String department = decodedToken['department'] ?? 'None';
+      if(department == "Suspended"){
+        _errorMessage = 'Your account is suspended. Please contact support.';
+        setState(() {});
+      } else{
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyApp()),
+        );
+      }
 
-      // Navigate to the home page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MyApp()), // Navigate to MyApp which will decide the home screen
-      );
     } else {
-      // Handle login failure
-      setState(() {
-        _errorMessage = json.decode(response.body)['msg'];
-      });
+      var responseData = json.decode(response.body);
+      _errorMessage = responseData['msg'];
+      setState(() {});
     }
   }
 
@@ -71,9 +76,10 @@ class _LoginViewState extends State<LoginView> {
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: _login,
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
             // Display the session expired message if it's passed
             if (widget.expiredSessionMessage != null)

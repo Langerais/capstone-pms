@@ -12,10 +12,10 @@ class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text('Hotel PMS'),
+      title: const Text('Hotel PMS'),
       actions: [
         IconButton(
-          icon: Icon(Icons.menu),
+          icon: const Icon(Icons.menu),
           onPressed: () {
             // Open the drawer
             Scaffold.of(context).openDrawer();
@@ -27,11 +27,12 @@ class CustomAppBar extends StatelessWidget {
 }
 
 @override
-Size get preferredSize => Size.fromHeight(kToolbarHeight);  // Required for PreferredSizeWidget
+Size get preferredSize => const Size.fromHeight(kToolbarHeight);  // Required for PreferredSizeWidget
 
 List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   List<Widget> drawerItems = [
+
     Container(
       height: 80,  // Set the desired height
       color: Colors.blue,
@@ -51,7 +52,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     Container(
       child: ListTile(
-        leading: Icon(Icons.home),
+        leading: const Icon(Icons.home),
         title: const Text('Notifications'),
         onTap: () {
           Navigator.push(
@@ -171,8 +172,8 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
   drawerItems.add(
     Container(
       child: ListTile(
-        leading: Icon(Icons.person),
-        title: Text('Profile'),
+        leading: const Icon(Icons.person),
+        title: const Text('Profile'),
         onTap: () {
           Navigator.pushNamed(context, '/profile_view'); // Navigate to Profile
         },
