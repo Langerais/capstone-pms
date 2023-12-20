@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:capstone_pms/authentication.dart';
 import 'package:capstone_pms/drawer_menu.dart';
 import 'package:flutter/foundation.dart';
@@ -12,10 +11,8 @@ import 'models.dart';
 import 'db_helper.dart';
 import 'package:collection/collection.dart';
 
-// TODO: Change Date Picker to Date Range Picker
 
 class ArrivalsDeparturesScreen extends StatelessWidget {
-
   final GlobalKey<_ArrivalsDeparturesTableState> _tableKey = GlobalKey();
 
   ArrivalsDeparturesScreen({super.key});
@@ -25,59 +22,52 @@ class ArrivalsDeparturesScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => CreateReservationView(
-          onReservationCreated: () {
-          },
+          onReservationCreated: () {},
         ),
       ),
     );
     _tableKey.currentState?.fetchData();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Arrivals/Departures'),
-        actions: <Widget>[
-          SizedBox(
-            width: 60,
-            height: 60,
-            child: IconButton(
-              icon: const Icon(Icons.add, size: 50),
-              onPressed: () => _navigateAndRefresh(context),
-            ),
-          ),
-        ],
-      ),
-      drawer: FutureBuilder<UserGroup>(
-        future: Auth.getUserRole(),  // Get the current user's role
-        builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // While waiting, show a progress indicator
-            return Drawer(
-              child: Center(child: CircularProgressIndicator()),
-            );
-          } else if (snapshot.hasError) {
-            // If there's an error, show an error message
-            return Drawer(
-              child: Center(child: Text('Error: ${snapshot.error}')),
-            );
-          } else {
-            // Once data is available, build the drawer
-            return Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
-                ],
+    return FutureBuilder<UserGroup>(
+      future: Auth.getUserRole(),
+      builder: (context, snapshot) {
+        List<Widget> appBarActions = [];
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData &&
+              (snapshot.data == UserGroup.Admin || snapshot.data == UserGroup.Manager || snapshot.data == UserGroup.Reception)) {
+            appBarActions.add(
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: IconButton(
+                  icon: const Icon(Icons.add, size: 50),
+                  onPressed: () => _navigateAndRefresh(context),
+                ),
               ),
             );
           }
-        },
-      ),
-      body: ArrivalsDeparturesTable(key: _tableKey),
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Arrivals/Departures'),
+            actions: appBarActions,
+          ),
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                ...getDrawerItems(snapshot.data ?? UserGroup.None, context),
+              ],
+            ),
+          ),
+          body: ArrivalsDeparturesTable(key: _tableKey),
+        );
+      },
     );
   }
 }
@@ -518,6 +508,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
     // State to hold the new selected status
     String newStatus = reservation.status ?? 'Pending';
+    UserGroup userRole = UserGroup.None;
 
     // Fetch the creation log for the reservation
     Future<Map<String, dynamic>> fetchCreationLogAndUser() async {
@@ -526,12 +517,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
           details: "Reservation Id: ${reservation.id}"
       );
 
+      userRole = await Auth.getUserRole();
 
       if (logs.isNotEmpty) {
         var log = logs.first;
         var user = await UsersService.getUser(log['user_id']);
-        print("USER: " + user.id.toString());
-        print(log['timestamp']);
         return {
           'timestamp': log['timestamp'],
           'user': user,
@@ -546,8 +536,6 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       if (statusChanges.isNotEmpty) {
         var lastStatusChange = statusChanges.last;
         var user = await UsersService.getUser(lastStatusChange.userId);
-        print("USER CHANGED: " + user.id.toString());
-        print("AT: " + lastStatusChange.timestamp.toIso8601String());
         return {
           'timestamp': lastStatusChange.timestamp,
           'user': user,
@@ -570,7 +558,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Reservation Details"),
-                  if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+                  if (userRole == UserGroup.Admin || userRole == UserGroup.Manager)
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => confirmAndDeleteReservation(context, reservation.id),

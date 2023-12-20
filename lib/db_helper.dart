@@ -224,11 +224,14 @@ class GuestService {
     required String email,
   }) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/guests/add_guest');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
-        //'channel_manager_id': channelManagerId,
         'name': name,
         'surname': surname,
         'phone': phone,
@@ -246,7 +249,14 @@ class GuestService {
 
   static Future<List<Guest>> getGuests() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guests');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -262,7 +272,15 @@ class GuestService {
 
   static Future<Guest> getGuest(int guestId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guest/$guestId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       return Guest.fromJson(jsonDecode(response.body));
     } else {
@@ -273,9 +291,13 @@ class GuestService {
 
   static Future<List<Guest>> getGuestsByIds(List<int> guestIds) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/guests/get_guests_by_ids');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({'guest_ids': guestIds}),
     );
     if (response.statusCode == 200) {
@@ -299,9 +321,13 @@ class GuestService {
 
   static Future<Guest?> findGuestByEmailOrPhone(String email, String phone) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/guests/find_guest');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({'email': email, 'phone': phone}),
     );
     if (response.statusCode == 200) {
@@ -317,7 +343,14 @@ class GuestService {
 class RoomService {
   static Future<List<Room>> getRooms() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/rooms/get_rooms');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -334,7 +367,15 @@ class RoomService {
 
   static Future<Room> getRoom(int roomId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/rooms/get_room/$roomId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       return Room.fromJson(jsonDecode(response.body));
     } else {
@@ -374,7 +415,14 @@ DateTime? parseDate(String dateString) {
 class MenuCategoryService {
   static Future<List<MenuCategory>> getMenuCategories() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_categories');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -388,8 +436,15 @@ class MenuCategoryService {
 class MenuService {
   static Future<MenuItem> getMenuItem(int itemId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_item/$itemId');
-    var response = await http.get(url);
-    print(MenuItem.fromJson(jsonDecode(response.body)));
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       return MenuItem.fromJson(jsonDecode(response.body));
     } else {
@@ -399,7 +454,15 @@ class MenuService {
 
   static Future<List<MenuItem>> getMenuItemsByCategory(int categoryId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_items_by_category/$categoryId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => MenuItem.fromJson(json)).toList();
@@ -410,9 +473,13 @@ class MenuService {
 
   static Future<void> addMenuItem(String name, int categoryId, String description, double price) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_item');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'name': name,
         'category_id': categoryId,
@@ -427,9 +494,13 @@ class MenuService {
 
   static Future<void> updateMenuItem(int itemId, String name, int categoryId, String description, double price) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/modify_item/$itemId');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'name': name,
         'category_id': categoryId,
@@ -444,7 +515,14 @@ class MenuService {
 
   static Future<void> deleteMenuItem(int itemId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/remove_item/$itemId');
-    var response = await http.delete(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode != 200) {
       throw Exception('Failed to delete menu item');
     }
@@ -457,9 +535,13 @@ class BalanceService {
 
   static Future<BalanceEntry> createBalanceEntry(int reservationId, int menuItemId, double amount) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_balance_entry');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'reservation_id': reservationId,
         'menu_item_id': menuItemId,
@@ -475,9 +557,13 @@ class BalanceService {
 
   static Future<void> addOrder(int reservationId, int menuItemId, int quantity, double pricePerItem) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/create_balance_entry');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'reservation_id': reservationId,
         'menu_item_id': menuItemId,
@@ -493,9 +579,13 @@ class BalanceService {
 
   static Future<void> addPayment(int reservationId, String paymentMethod, double amount) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/add_payment');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'reservation_id': reservationId,
         'payment_method': paymentMethod,
@@ -509,10 +599,17 @@ class BalanceService {
   }
 
   static Future<bool> deleteBalanceEntry(int balanceEntryId) async {
-    final String url = '${AppConfig.BASE_URL}/menu/remove_balance_entry/$balanceEntryId';
+    var url = Uri.parse('${AppConfig.BASE_URL}/menu/remove_balance_entry/$balanceEntryId');
 
     try {
-      final response = await http.delete(Uri.parse(url));
+      final token = await CrossPlatformTokenStorage.getToken();
+      var response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         Fluttertoast.showToast(
@@ -541,11 +638,19 @@ class BalanceService {
 
   static Future<List<BalanceEntry>> getBalanceEntriesForReservation(int reservationId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/menu/get_balance_entries/$reservationId');
-    var response = await http.get(url);
+
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
-      print(jsonData);
-      print(jsonData.length);
+
       return jsonData.map((json) => BalanceEntry.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load balance entries for reservation $reservationId');
@@ -555,7 +660,15 @@ class BalanceService {
 
   static Future<double> calculateUnpaidAmount(int reservationId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/reservations/calculate_unpaid_amount/$reservationId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       return double.parse(data['unpaid_amount']);
@@ -575,7 +688,14 @@ class CleaningService {
       'end_date': endDate.toIso8601String(),
     });
 
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -587,7 +707,14 @@ class CleaningService {
 
   static Future<List<CleaningAction>> getCleaningActions() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/get_cleaning_actions');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
@@ -601,8 +728,15 @@ class CleaningService {
 
   static Future<CleaningAction> getCleaningAction(int actionId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/get_cleaning_action/$actionId');
-    var response = await http.get(url);
-    print(CleaningAction.fromJson(jsonDecode(response.body)));
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
     if (response.statusCode == 200) {
       return CleaningAction.fromJson(jsonDecode(response.body));
     } else {
@@ -612,9 +746,13 @@ class CleaningService {
 
   static Future<void> scheduleCleaning(DateTime startDate) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/schedule_cleaning');
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'start_date': startDate.toIso8601String().split('T').first, // Formatting the date as 'YYYY-MM-DD'
       }),
@@ -629,11 +767,13 @@ class CleaningService {
   static Future<void> toggleCleaningTaskStatus(int scheduleId, String newStatus, String completedDate) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/toggle_task_status/$scheduleId');
 
-    //DateTime completed = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
-    //String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(completedDate);
+    final token = await CrossPlatformTokenStorage.getToken();
     var response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'completed_date': completedDate,
         'task_status': newStatus,
@@ -646,10 +786,14 @@ class CleaningService {
   }
 
   static Future<bool> createCleaningAction(String actionName, int frequencyDays) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/create_cleaning_action'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/create_cleaning_action');
+
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
         'action_name': actionName,
@@ -660,10 +804,14 @@ class CleaningService {
   }
 
   static Future<bool> updateCleaningAction(int actionId, String actionName, int frequency) async {
-    final response = await http.put(
-      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/modify_cleaning_action/$actionId'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/modify_cleaning_action/$actionId');
+
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.put(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
         'action_name': actionName,
@@ -671,15 +819,18 @@ class CleaningService {
       }),
     );
 
-    print("Send: " + actionId.toString() + " " + actionName.toString() + " " + frequency.toString());
     return response.statusCode == 200;
   }
 
   static Future<bool> deleteCleaningAction(int actionId) async {
-    final response = await http.delete(
-      Uri.parse('${AppConfig.BASE_URL}/cleaning_management/remove_cleaning_action/$actionId'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+    var url = Uri.parse('${AppConfig.BASE_URL}/cleaning_management/remove_cleaning_action/$actionId');
+
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
       },
     );
     return response.statusCode == 200;
@@ -692,7 +843,14 @@ class LogService {
   // Get all logs
   static Future<List<Log>> getLogs() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/get_logs');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -703,7 +861,14 @@ class LogService {
 
   static Future<List<String>> getUniqueActions() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/actions');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<String> actions = List<String>.from(json.decode(response.body));
       return actions;
@@ -714,7 +879,14 @@ class LogService {
 
   static Future<List<Log>> getLogsForAction(String action) async { // TODO: Implement Endpoint
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/action/$action');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -728,7 +900,14 @@ class LogService {
     String start = startDate.toIso8601String();
     String end = endDate.toIso8601String();
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/date_range/$start/$end');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -740,7 +919,14 @@ class LogService {
 
   static Future<List<Log>> getLogsForUser(int userId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/user/$userId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -754,7 +940,14 @@ class LogService {
     String start = startDate.toIso8601String();
     String end = endDate.toIso8601String();
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/user/$userId/date_range/$start/$end');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -766,7 +959,14 @@ class LogService {
  // Get logs for a specific user, for a specific action
   static Future<List<Log>> getLogsForUserAndAction(String action, int userId) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/logging/user/$action/action/$userId');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       List<dynamic> logsJson = json.decode(response.body);
       return logsJson.map((json) => Log.fromJson(json)).toList();
@@ -795,7 +995,14 @@ class LogService {
     queryParams.removeWhere((key, value) => value == null);
 
     var uri = Uri.parse('${AppConfig.BASE_URL}/logging/search_logs').replace(queryParameters: queryParams);
-    var response = await http.get(uri);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -817,9 +1024,13 @@ class UsersService {
     required String password,
   }) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/user_management/create_user');
-    var response = await http.post(
+    String? token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode({
         'name': name,
         'surname': surname,
@@ -843,10 +1054,12 @@ class UsersService {
   }) async {
     final url = Uri.parse('${AppConfig.BASE_URL}/registration/register'); // Update with your actual server URL
 
-    final response = await http.post(
+    String? token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.post(
       url,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
       },
       body: jsonEncode({
         'name': name,
@@ -876,9 +1089,13 @@ class UsersService {
     required String department,
   }) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/modify_user/$userId');
+    String? token = await CrossPlatformTokenStorage.getToken();
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode({
         'name': name,
         'surname': surname,
@@ -894,14 +1111,18 @@ class UsersService {
 
   static Future<void> changeDepartment(int userId, String department) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/change_department/$userId');
+    String? token = await CrossPlatformTokenStorage.getToken();
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode({
         'department': department,
       }),
     );
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200) {
       throw Exception('Failed to change User department');
     }
   }
@@ -919,7 +1140,14 @@ class UsersService {
 
   static Future<User> getUserByEmail(String email) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/get_user_by_email/$email');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       User user = User.fromJson(jsonDecode(response.body));
@@ -952,7 +1180,14 @@ class UsersService {
 
   static Future<List<User>> getUsersByDepartment(String department) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/get_users_by_department/$department');
-    var response = await http.get(url);
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body) as List;
       return jsonData.map((json) => User.fromJson(json)).toList();
@@ -963,9 +1198,13 @@ class UsersService {
 
   static Future<void> changePassword(String oldPassword, String newPassword) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/change_password/');
+    String? token = await CrossPlatformTokenStorage.getToken();
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode({
         'old_password': oldPassword,
         'new_password': newPassword,
@@ -981,15 +1220,18 @@ class UsersService {
 
   static Future<void> changePasswordManager(int userId, String managerPassword, String newPassword) async {
     var url = Uri.parse('${AppConfig.BASE_URL}/users/change_password_manager/$userId');
+    String? token = await CrossPlatformTokenStorage.getToken();
     var response = await http.put(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
       body: jsonEncode({
         'manager_password': managerPassword,
         'new_password': newPassword,
       }),
     );
-
     if (response.statusCode != 200) {
       Map<String, dynamic> responseBody = json.decode(response.body);
       String message = responseBody['msg'] ?? 'Failed to update password';
@@ -998,7 +1240,15 @@ class UsersService {
   }
 
   static Future<List<Department>> getAllDepartments() async {
-    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/users/get_all_departments'));
+    var url = Uri.parse('${AppConfig.BASE_URL}/users/get_all_departments');
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic> departmentJsonList = jsonDecode(response.body);
@@ -1026,8 +1276,7 @@ class TimeZoneService {
         _timezone = data['timezone'];
         return _timezone;
       } else {
-        // Handle non-200 response (optional)
-        return null; // Or handle as appropriate
+        return null;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -1042,7 +1291,16 @@ class TimeZoneService {
 class AppNotificationsService {
 
   static Future<List<AppNotification>> getAppNotifications() async {
-    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications'));
+
+    var url = Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications');
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -1053,7 +1311,15 @@ class AppNotificationsService {
   }
 
   static Future<List<AppNotification>> getAppNotificationsByDepartment(String department) async {
-    final response = await http.get(Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications/department/$department'));
+    var url = Uri.parse('${AppConfig.BASE_URL}/notifications/get_notifications/department/$department');
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -1065,22 +1331,25 @@ class AppNotificationsService {
 
 
   static Future<void> createNotification(AppNotification notification) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.BASE_URL}/notifications/add_notification'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+    final url = Uri.parse('${AppConfig.BASE_URL}/notifications/add_notification');
+    final token = await CrossPlatformTokenStorage.getToken();
+    var response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
       },
       body: jsonEncode(notification.toJson()),
     );
 
     if (response.statusCode == 201) {
-      // Handle successful creation
+      // Notification created successfully
+      return;
     } else {
-      // Handle error
+      // Error occurred
+      throw Exception('Failed to create notification');
     }
   }
-
-
 }
 
 

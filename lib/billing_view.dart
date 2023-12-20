@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'authentication.dart';
 import 'config.dart';
@@ -9,7 +7,6 @@ import 'db_helper.dart';
 import 'models.dart';
 import 'package:intl/intl.dart';
 import 'drawer_menu.dart';
-
 
 
 class BillingView extends StatefulWidget {
@@ -56,11 +53,10 @@ class _BillingViewState extends State<BillingView> {
           builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               // While waiting, show a progress indicator
-              return Drawer(
+              return const Drawer(
                 child: Center(child: CircularProgressIndicator()),
               );
             } else if (snapshot.hasError) {
-              // If there's an error, show an error message
               return Drawer(
                 child: Center(child: Text('Error: ${snapshot.error}')),
               );
@@ -88,17 +84,17 @@ class _BillingViewState extends State<BillingView> {
                     child: ListTile(
                       title: Text(
                         'Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
                       ),
-                      trailing: Icon(Icons.calendar_today),
+                      trailing: const Icon(Icons.calendar_today),
                       onTap: () => _selectDate(context),
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.today),
+                    icon: const Icon(Icons.today),
                     onPressed: () => _setToday(),
                   ),
                 ],
@@ -116,7 +112,7 @@ class _BillingViewState extends State<BillingView> {
                   return FutureBuilder<double>(
                     future: BalanceService.calculateUnpaidAmount(reservation.id),
                     builder: (context, unpaidAmountSnapshot) {
-                      if (!unpaidAmountSnapshot.hasData) return CircularProgressIndicator();
+                      if (!unpaidAmountSnapshot.hasData) return const CircularProgressIndicator();
                       double unpaidAmount = unpaidAmountSnapshot.data!;
 
                       return ListTile(
@@ -205,7 +201,7 @@ class _BillingViewState extends State<BillingView> {
   void _startPeriodicFetch() {
     _timer?.cancel();
     if (_timer == null || !_timer!.isActive) {
-      _timer = Timer.periodic(Duration(seconds: AppConfig.REFRESH_TIMER), (Timer t) =>
+      _timer = Timer.periodic(const Duration(seconds: AppConfig.REFRESH_TIMER), (Timer t) =>
           fetchReservationsAndGuests());
     }
   }
@@ -213,10 +209,8 @@ class _BillingViewState extends State<BillingView> {
   @override
   void dispose() {
     _timer?.cancel(); // Cancel the timer when the widget is disposed
-    print("Timer cancelled");
     super.dispose();
   }
-
 }
 
 
@@ -227,7 +221,12 @@ class BillingDetailsDialog extends StatelessWidget {
   final String guestSurname;
   final Function onRefresh;
 
-  BillingDetailsDialog({required this.reservationId, required this.roomName, required this.guestSurname, required this.onRefresh});
+  BillingDetailsDialog({
+    required this.reservationId,
+    required this.roomName,
+    required this.guestSurname,
+    required this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,66 +237,89 @@ class BillingDetailsDialog extends StatelessWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.95,
           maxHeight: MediaQuery.of(context).size.height * 0.90,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('Billing Details for Room $roomName, Guest $guestSurname'),
-            ),
-            Divider(),
-            Flexible(
-              child: FutureBuilder<List<BalanceEntry>>(
-                future: BalanceService.getBalanceEntriesForReservation(reservationId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('No billing details available.');
-                  }
-                  List<BalanceEntry> entries = snapshot.data!;
-                  entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      BalanceEntry entry = entries[index];
-                      return _buildListItem(context, entry);
-                    },
-                  );
-                },
-              ),
-            ),
-            ButtonBar(
-              children: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Close'),
-                ),
-                ElevatedButton(
-                  onPressed: () => _showAddPaymentDialog(context, reservationId),
-                  child: Text('Add Payment'),
-                ),
-              ],
-            ),
-          ],
+        child: FutureBuilder<UserGroup>(
+          future: Auth.getUserRole(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasData && (snapshot.data == UserGroup.Admin || snapshot.data == UserGroup.Manager)) {
+              return _buildAdminView(context, true);
+            } else {
+              return _buildAdminView(context, false);
+            }
+          },
         ),
       ),
     );
   }
 
+  Widget _buildAdminView(BuildContext context, bool isAdmin) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Billing Details for Room $roomName, Guest $guestSurname'),
+        ),
+        const Divider(),
+        Flexible(
+          child: _buildBalanceEntries(context, isAdmin),
+        ),
+        ButtonBar(
+          children: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            if (isAdmin)
+              ElevatedButton(
+                onPressed: () => _showAddPaymentDialog(context, reservationId),
+                child: const Text('Add Payment'),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 
+  Widget _buildBalanceEntries(BuildContext context, bool isAdmin) {
+    return FutureBuilder<List<BalanceEntry>>(
+      future: BalanceService.getBalanceEntriesForReservation(reservationId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text('No billing details available.');
+        }
+        List<BalanceEntry> entries = snapshot.data!;
+        entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-  Widget _buildListItem(BuildContext context, BalanceEntry entry) {
-    bool isAdmin = Auth.getUserRole() == UserGroup.Admin; // Check if the user is admin
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: entries.length,
+          itemBuilder: (context, index) {
+            BalanceEntry entry = entries[index];
+            return _buildListItem(context, entry, isAdmin);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildListItem(BuildContext context, BalanceEntry entry, bool isAdmin) {
     String paymentMethod = entry.menuItemId == 0 ? "CASH" : "CARD";
 
+    void refreshAndCloseDialog() {
+      onRefresh();
+      Navigator.of(context).pop(); // Close the dialog after refreshing
+    }
+
     if (entry.menuItemId == 0 || entry.menuItemId == -1) {
+      // Payment entry
       return ListTile(
         title: Text(
-          'Payed $paymentMethod : ${entry.amount.toStringAsFixed(2)}€',
+          'Payed $paymentMethod: ${entry.amount.toStringAsFixed(2)}€',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.green,
@@ -306,63 +328,35 @@ class BillingDetailsDialog extends StatelessWidget {
         subtitle: Text(DateFormat('dd/MM/yyyy').format(entry.timestamp)),
         trailing: isAdmin ? IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () =>
-              _showDeleteConfirmationDialog(
-                  context, entry, () => refreshDialog(context)),
+          onPressed: () => _showDeleteConfirmationDialog(context, entry, refreshAndCloseDialog),
         ) : null,
-        onTap: isAdmin ? () =>
-            _showDeleteConfirmationDialog(
-                context, entry, () => refreshDialog(context)) : null,
       );
     } else {
-      // This is an order entry
+      // Order entry
       return FutureBuilder<MenuItem>(
         future: MenuService.getMenuItem(entry.menuItemId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return ListTile(title: Text('Loading...'));
+            return const ListTile(title: Text('Loading...'));
           }
           if (!snapshot.hasData) {
-            return ListTile(title: Text('Item not found'));
+            return const ListTile(title: Text('Item not found'));
           }
           MenuItem menuItem = snapshot.data!;
-          return _buildOrderTile(context, entry, isAdmin, menuItem.name);
+          return ListTile(
+            title: Text(
+              '${entry.numberOfItems} x ${menuItem.name} - ${entry.amount.toStringAsFixed(2)}€',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+            subtitle: Text(DateFormat('dd/MM/yyyy').format(entry.timestamp)),
+            trailing: isAdmin ? IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _showDeleteConfirmationDialog(context, entry, refreshAndCloseDialog),
+            ) : null,
+          );
         },
       );
     }
-
-  }
-
-  Widget _buildOrderTile(BuildContext context, BalanceEntry entry, bool isAdmin, String itemName) {
-    return ListTile(
-      title: Text(
-        '${entry.numberOfItems} x $itemName - ${entry.amount.toStringAsFixed(2)}€',
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-      ),
-      subtitle: Text(DateFormat('dd/MM/yyyy').format(entry.timestamp)),
-      trailing: _buildTrailingIcon(context, entry, isAdmin),
-    );
-  }
-
-  IconButton? _buildTrailingIcon(BuildContext context, BalanceEntry entry, bool isAdmin) {
-    return isAdmin ? IconButton(
-      icon: const Icon(Icons.delete, color: Colors.red),
-      onPressed: () => _showDeleteConfirmationDialog(context, entry, () => refreshDialog(context)),
-    ) : null;
-  }
-
-  void refreshDialog(BuildContext context) {
-    Navigator.pop(context); // Close the current dialog
-    onRefresh(); // Refresh the main BillingView
-    showDialog(
-      context: context,
-      builder: (context) => BillingDetailsDialog(
-        reservationId: reservationId,
-        roomName: roomName,
-        guestSurname: guestSurname,
-        onRefresh: onRefresh,
-      ),
-    );
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, BalanceEntry entry, VoidCallback refreshDialog) {
@@ -370,7 +364,7 @@ class BillingDetailsDialog extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Delete'),
+          title: const Text('Confirm Delete'),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -378,17 +372,17 @@ class BillingDetailsDialog extends StatelessWidget {
                 Text('Guest: $guestSurname'),
                 Text('Amount: €${entry.amount.toStringAsFixed(2)}'),
                 Text('Date: ${DateFormat('dd/MM/yyyy').format(entry.timestamp)}'),
-                Text('Are you sure you want to delete this entry?'),
+                const Text('Are you sure you want to delete this entry?'),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: Text('Delete'),
+              child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop(); // Close the confirmation dialog first
                 bool success = await BalanceService.deleteBalanceEntry(entry.id);
@@ -403,8 +397,6 @@ class BillingDetailsDialog extends StatelessWidget {
       },
     );
   }
-
-
 
   void _showAddPaymentDialog(BuildContext context, int reservationId) {
     showDialog(
@@ -459,21 +451,21 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add Payment'),
+      title: const Text('Add Payment'),
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[
             Text('Unpaid Amount: \$${unpaidAmount.toStringAsFixed(2)}'),
             TextField(
               controller: _amountController,
-              decoration: InputDecoration(labelText: 'Payment Amount'),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Payment Amount'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _paymentMethodSelector('CASH'),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 _paymentMethodSelector('CARD'),
               ],
             ),
@@ -483,11 +475,11 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () => _processPayment(),
-          child: Text('Pay'),
+          child: const Text('Pay'),
         ),
       ],
     );
@@ -500,34 +492,29 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
           _paymentMethod = method;
         });
       },
-      child: Text(method.toUpperCase()),
       style: OutlinedButton.styleFrom(
         backgroundColor: _paymentMethod == method ? Colors.blue : Colors.white,
         primary: _paymentMethod == method ? Colors.white : Colors.blue,
       ),
+      child: Text(method.toUpperCase()),
     );
   }
 
 
   void _processPayment() async {
     if (_amountController.text.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Amount cannot be empty",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Amount cannot be empty')),
       );
       return;
     }
 
     double amount = double.tryParse(_amountController.text) ?? 0.0;
 
+    // Check if the amount is greater than the unpaid amount, if so set the amount to the unpaid amount
     if(amount > unpaidAmount) {
-      Fluttertoast.showToast(
-        msg: "Amount cannot be greater than unpaid amount",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Amount cannot be greater than unpaid amount')),
       );
       _amountController.text = unpaidAmount.toStringAsFixed(2);
       return;
@@ -537,15 +524,15 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
     bool confirm = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirm Payment'),
+        title: const Text('Confirm Payment'),
         content: Text('Pay: ${amount.toStringAsFixed(2)}€ $_paymentMethod\nRoom: ${widget.roomName}\nGuest: ${widget.guestSurname}'),
         actions: [
           TextButton(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(false), // returns false
           ),
           ElevatedButton(
-            child: Text('Confirm'),
+            child: const Text('Confirm'),
             onPressed: () => Navigator.of(context).pop(true), // returns true
           ),
         ],
@@ -562,11 +549,8 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
       Navigator.of(context).pop();
       Navigator.of(context).pop();
     } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Failed to add payment: $e",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to add payment: $e")),
       );
     }
   }

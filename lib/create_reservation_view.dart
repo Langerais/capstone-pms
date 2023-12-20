@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'models.dart';
 import 'db_helper.dart';
@@ -269,14 +268,9 @@ class _CreateReservationViewState extends State<CreateReservationView> {
         List<Reservation> checkReservations = await ReservationService.getReservationsByRoomAndDateRange(selectedStartDate.add(Duration(days: 1)), selectedEndDate.subtract(Duration(days: 1)), selectedRoom!.id);
         if(checkReservations.isNotEmpty) {
 
-          Fluttertoast.showToast(
-              msg: "Room is not available for the selected date range",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 16.0
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Room is not available for the selected date range')),
           );
 
           widget.onReservationCreated();
@@ -620,7 +614,7 @@ class _CreateReservationViewState extends State<CreateReservationView> {
       floatingActionButton: FloatingActionButton(
         onPressed: addReservation,
         backgroundColor: Colors.blue,
-        child: Icon(Icons.save),
+        child: const Icon(Icons.save),
       ),
     );
   }

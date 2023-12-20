@@ -24,20 +24,22 @@ class _UserManagementViewState extends State<UserManagementView> {
   String? _selectedDepartment;
   bool _isEditing = false;
   bool _isPasswordChange = false;
+  bool hasAccess = false;
 
   @override
-  void initState() {
+  initState() {
     super.initState();
     _initializeView();
-    print('Current user: ${_currentUser?.name} ${_currentUser?.surname}');
-
   }
 
   Future<void> _initializeView() async {
     try {
       List<User> users = await UsersService.getUsers();
       _currentUser = await Auth.getCurrentUser();
-      //print('Current user: ${_currentUser?.name} ${_currentUser?.surname}');
+
+      if(_currentUser?.department == 'Admin') {
+        hasAccess = true;
+      }
 
       setState(() {
         _users = users.where((user) => user.id != _currentUser?.id).toList();
@@ -45,18 +47,15 @@ class _UserManagementViewState extends State<UserManagementView> {
         _selectedUser = _users.isNotEmpty ? _users.first : null;
         _updateControllers();
       });
-    } catch (e) {
-      // Handle errors if necessary
-    }
+    } catch (e) {}
   }
 
-  void _refreshUserList() async {
+  Future<void> _refreshUserList() async {
     try {
       List<User> users = await UsersService.getUsers();
       users.sort((a, b) => a.department.compareTo(b.department));
       setState(() {
         _users = users;
-        // You may need to reset _selectedUser or other related states as well
         _selectedUser = _users.isNotEmpty ? _users.first : null;
         _updateControllers();
       });
@@ -114,14 +113,13 @@ class _UserManagementViewState extends State<UserManagementView> {
       );
       return;
     }
-    //_currentUser = await Auth.getCurrentUser();
 
     bool managerPasswordCorrect = await Auth.checkPassword(
         _currentUser!.email, _managerPasswordController.text);
 
     try {
       if (!managerPasswordCorrect) {
-          SnackBar(content: Text('Incorrect manager password'));
+          const SnackBar(content: Text('Incorrect manager password'));
           return;
       }
     } catch (e) {
@@ -161,11 +159,18 @@ class _UserManagementViewState extends State<UserManagementView> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('User updated successfully')),
+      const SnackBar(content: Text('User updated successfully')),
     );
 
-    _managerPasswordController.clear(); //TODO: Fix dropdown refresh on save and manager password clear
-    _refreshUserList(); // TODO: FIX THIS
+    setState(() {
+      _isEditing = false;
+      _isPasswordChange = false;
+      _managerPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmNewPasswordController.clear();
+    });
+
+    await _refreshUserList(); // TODO: FIX THIS
     // Refresh the user list
     await _initializeView();
   }
@@ -176,9 +181,12 @@ class _UserManagementViewState extends State<UserManagementView> {
       appBar: AppBar(
         title: const Text('User Management'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _navigateToNewUserView,
+          Visibility(
+            visible: hasAccess,
+            child: IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _navigateToNewUserView,
+            ),
           ),
         ],
       ),
@@ -187,7 +195,7 @@ class _UserManagementViewState extends State<UserManagementView> {
         builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // While waiting, show a progress indicator
-            return Drawer(
+            return const Drawer(
               child: Center(child: CircularProgressIndicator()),
             );
           } else if (snapshot.hasError) {
@@ -219,13 +227,13 @@ class _UserManagementViewState extends State<UserManagementView> {
               if (_users.isNotEmpty) _buildUserDropdown(),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) => value != null && value.contains('@') ? null : 'Enter a valid email',
                 onChanged: (_) => _isEditing = true,
               ),
               TextFormField(
                 controller: _phoneController,
-                decoration: InputDecoration(labelText: 'Phone'),
+                decoration: const InputDecoration(labelText: 'Phone'),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) => value != null && value.isNotEmpty ? null : 'Enter a valid phone number',
@@ -240,7 +248,7 @@ class _UserManagementViewState extends State<UserManagementView> {
                 children: [
                   ElevatedButton(
                     onPressed: _saveChanges,
-                    child: Text('Save Changes'),  // TODO: Fix dropdown refresh on save and manager password clear
+                    child: const Text('Save Changes'),  // TODO: Fix dropdown refresh on save and manager password clear
                   ),
                   ElevatedButton(
                     onPressed: () => setState(() => _isPasswordChange = !_isPasswordChange),
@@ -343,7 +351,7 @@ class _UserManagementViewState extends State<UserManagementView> {
   Widget _buildManagerPasswordField() {
     return TextFormField(
       controller: _managerPasswordController,
-      decoration: const InputDecoration(labelText: 'Manager Password'),
+      decoration: const InputDecoration(labelText: 'Manager Password (Your)'),
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {

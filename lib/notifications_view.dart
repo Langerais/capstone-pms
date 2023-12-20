@@ -25,6 +25,7 @@ class _NotificationsViewState extends State<NotificationsView> {
   List<String> availableRoles = []; // All available roles
   Map<String, bool> selectedRoles = {}; // Selected roles
   int selectedPriority = 1;
+  UserGroup userRole = UserGroup.None;
 
   Duration lifetime = Duration();
   TextEditingController daysController = TextEditingController();
@@ -36,6 +37,7 @@ class _NotificationsViewState extends State<NotificationsView> {
   @override
   void initState() {
     super.initState();
+    print('NotificationsView initState');
     _fetchNotifications();
     _fetchDepartments();
   }
@@ -57,8 +59,11 @@ class _NotificationsViewState extends State<NotificationsView> {
 
   _fetchNotifications() async {
     try {
+      userRole = await Auth.getUserRole();
+      String roleString = userRole.toString().split('.').last;
+
       var notificationsList = await AppNotificationsService.getAppNotificationsByDepartment(
-          Auth.getUserRole().toString().split('.').last
+          roleString
       );
 
       // Sort notifications by priority and then by time to live
@@ -120,7 +125,7 @@ class _NotificationsViewState extends State<NotificationsView> {
 
         actions: <Widget>[
 
-          if(Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
+          if(userRole == UserGroup.Admin || userRole == UserGroup.Manager)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
@@ -134,7 +139,7 @@ class _NotificationsViewState extends State<NotificationsView> {
         builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // While waiting, show a progress indicator
-            return Drawer(
+            return const Drawer(
               child: Center(child: CircularProgressIndicator()),
             );
           } else if (snapshot.hasError) {

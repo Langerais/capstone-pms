@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'authentication.dart';
 import 'db_helper.dart';
 import 'models.dart';
@@ -20,6 +19,7 @@ class MenuView extends StatefulWidget {
 
 class _MenuViewState extends State<MenuView> {
   late Future<List<MenuCategory>> _categories;
+  UserGroup userGroup = UserGroup.None;
 
   @override
   void initState() {
@@ -47,6 +47,7 @@ class _MenuViewState extends State<MenuView> {
               child: Center(child: Text('Error: ${snapshot.error}')),
             );
           } else {
+            userGroup = snapshot.data!;
             // Once data is available, build the drawer
             return Drawer(
               child: ListView(
@@ -102,42 +103,73 @@ class _MenuViewState extends State<MenuView> {
   }
 }
 
-class CategoryItemsView extends StatelessWidget {
+class CategoryItemsView extends StatefulWidget {
   final int categoryId;
 
   CategoryItemsView({required this.categoryId});
 
   @override
+  _CategoryItemsViewState createState() => _CategoryItemsViewState();
+}
+
+class _CategoryItemsViewState extends State<CategoryItemsView> {
+  late Future<List<MenuItem>> _menuItems;
+  late Future<UserGroup> _userGroupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuItems = MenuService.getMenuItemsByCategory(widget.categoryId);
+    _userGroupFuture = Auth.getUserRole(); // Get user role asynchronously
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Menu Items'),
+        title: const Text('Menu Items'),
         actions: <Widget>[
-          if (Auth.getUserRole() == UserGroup.Admin || Auth.getUserRole() == UserGroup.Manager)
-            IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                _showCreateItemDialog(context, categoryId);
-              },
-            ),
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (BuildContext context) => EditItemDialog(categoryId: categoryId),
-    ),
+          FutureBuilder<UserGroup>(
+            future: _userGroupFuture,
+            builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
+              if (!snapshot.hasData) {
+                return Container(); // Return an empty container if user role is not yet determined
+              }
+              UserGroup userGroup = snapshot.data!;
+              if (userGroup == UserGroup.Admin || userGroup == UserGroup.Manager) {
+                return Row(
+                  children: <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        _showCreateItemDialog(context, widget.categoryId);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => showDialog(
+                        context: context,
+                        builder: (BuildContext context) => EditItemDialog(categoryId: widget.categoryId),
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                return Container(); // Return an empty container if user role does not have permission
+              }
+            },
           ),
         ],
       ),
       body: FutureBuilder<List<MenuItem>>(
-        future: MenuService.getMenuItemsByCategory(categoryId),
+        future: _menuItems,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No items available in this category'));
+            return const Center(child: Text('No items available in this category'));
           } else {
             return ListView.builder(
               itemCount: snapshot.data!.length,
@@ -268,41 +300,25 @@ void _showCreateItemDialog(BuildContext context, int categoryId) {
 
               if (name.isEmpty || description.isEmpty || price == null || price < 0) {
                 // Handle input validation
-                Fluttertoast.showToast(
-                  msg: "Please fill in all fields with valid data.",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0,
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill in all fields with valid data.')),
                 );
                 return;
               }
 
               try {
                 await MenuService.addMenuItem(name, categoryId, description, price);
-                Fluttertoast.showToast(
-                  msg: "$name added successfully",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.green,
-                  textColor: Colors.white,
-                  fontSize: 16.0,
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$name added successfully')),
                 );
                 Navigator.of(context).pop(); // Close the create item dialog
                 Navigator.of(context).pop(); // Navigate back to the categories view
 
               } catch (e) {
                 // Handle errors like network issues or server errors
-                Fluttertoast.showToast(
-                  msg: "Failed to create item: $e",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0,
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to create item: $e')),
                 );
-
               }
             },
           ),
@@ -383,22 +399,17 @@ class __ConfirmOrderDialogState extends State<_ConfirmOrderDialog> {
       ),
       actions: <Widget>[
         TextButton(
-          child: Text('Yes'),
+          child: const Text('Yes'),
           onPressed: () async {
             await BalanceService.addOrder(widget.reservation.id, widget.item.id, itemCount, widget.item.price);
             Navigator.of(context).pop(); // Close the dialog
-            Fluttertoast.showToast(
-              msg: "${widget.item.name} x$itemCount added to Room ${widget.room.id} - ${widget.room.name}",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 16.0,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${widget.item.name} x$itemCount added to Room ${widget.room.id} - ${widget.room.name}')),
             );
           },
         ),
         TextButton(
-          child: Text('No'),
+          child: const Text('No'),
           onPressed: () {
             Navigator.of(context).pop(); // Close the dialog
           },
@@ -472,7 +483,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
 // Inside the build method of _EditItemDialogState
     return AlertDialog(
-      title: Text('Edit Menu Item'),
+      title: const Text('Edit Menu Item'),
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[
@@ -505,15 +516,15 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
             TextField(
               controller: nameController,
-              decoration: InputDecoration(hintText: 'Item Name'),
+              decoration: const InputDecoration(hintText: 'Item Name'),
             ),
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(hintText: 'Description'),
+              decoration: const InputDecoration(hintText: 'Description'),
             ),
             TextField(
               controller: priceController,
-              decoration: InputDecoration(hintText: 'Price'),
+              decoration: const InputDecoration(hintText: 'Price'),
               keyboardType: TextInputType.number,
             ),
             DropdownButton<int>(
@@ -531,20 +542,15 @@ class _EditItemDialogState extends State<EditItemDialog> {
               }).toList(),
             ),
             TextButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: () async {
 
                 try {
 
                   if (nameController.text.isEmpty || priceController.text.isEmpty || double.parse(priceController.text) < 0) {
                     // Handle input validation
-                    Fluttertoast.showToast(
-                      msg: "Please fill in all fields with valid data.",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please fill in all fields with valid data.')),
                     );
                     return;
                   }
@@ -559,13 +565,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   Navigator.of(context).pop(); // Close the edit dialog
                   Navigator.of(context).pop(); // Close the category items view
 
-                  Fluttertoast.showToast(
-                    msg: "Item '${nameController.text}' updated successfully",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.green,
-                    textColor: Colors.white,
-                    fontSize: 16.0,
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Item '${nameController.text}' updated successfully")),
                   );
                 } catch (e) {
                   // Handle the error (e.g., show an error message)
@@ -573,7 +574,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
               },
             ),
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -612,23 +613,17 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   Navigator.of(context).pop(); // Close the edit dialog
                   Navigator.of(context).pop(); // Close the category items view
 
-                  Fluttertoast.showToast(
-                    msg: "Item '${item.name}' deleted successfully",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    fontSize: 16.0,
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Item '${item.name}' deleted successfully")),
                   );
                 } catch (e) {
-                  // Handle the error (e.g., show an error message)
                   Navigator.of(context).pop(); // Close the confirmation dialog
                 }
               },
               style: TextButton.styleFrom(primary: Colors.red),
             ),
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop(); // Close the confirmation dialog
               },
@@ -638,8 +633,5 @@ class _EditItemDialogState extends State<EditItemDialog> {
       },
     );
   }
-
-  // TODO: Add a method to add/rename/delete a new category (Check for existing items and set to "Deleted category?")
-
 }
 

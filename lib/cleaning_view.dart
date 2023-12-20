@@ -54,7 +54,7 @@ class _CleaningScheduleViewState extends State<CleaningView> {
             appBar: AppBar(
               title: const Text('Cleaning Schedule'),
             ),
-            body: Center(child: CircularProgressIndicator()),
+            body: const Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           // If there's an error, show an error message
@@ -79,7 +79,7 @@ class _CleaningScheduleViewState extends State<CleaningView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => ManageCleaningActions()),
-                    );
+                    ).then((_) => _fetchData());  // Refresh state when ManageCleaningActions is popped
                   },
                 ),
               );
