@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:capstone_pms/authentication.dart';
-import 'package:capstone_pms/drawer_menu.dart';
+import 'package:MyLittlePms/authentication.dart';
+import 'package:MyLittlePms/drawer_menu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -389,12 +389,12 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
 
   // Utility function to format DateTime
   String formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year % 100}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
   }
 
   // Utility function to get the day name from DateTime
   String formatDayName(DateTime date) {
-    List<String> daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    List<String> daysOfWeek = ['M', 'T', 'W', 'Th', 'F', 'Sa', 'Su'];
     return daysOfWeek[date.weekday - 1];
   }
 

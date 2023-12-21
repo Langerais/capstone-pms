@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +6,6 @@ import 'authentication.dart';
 import 'db_helper.dart';
 import 'drawer_menu.dart';
 import 'models.dart';
-import 'package:http/http.dart' as http;
 
 // TODO: Refresh view every minute
 

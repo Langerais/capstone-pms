@@ -70,8 +70,8 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
     drawerItems.add(
       Container(
         child: ListTile(
-          leading: const Icon(Icons.home),
-          title: const Text('Restoraurant Menu'),
+          leading: const Icon(Icons.restaurant),
+          title: const Text('Restaurant Menu'),
           onTap: () {
             Navigator.pushNamed(context, '/menu_view'); // Navigate to Menu
           },
@@ -125,7 +125,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
     drawerItems.add(
       ListTile(
-        leading: const Icon(Icons.people),
+        leading: const Icon(Icons.emoji_people_outlined),
         title: const Text('Guests'),
         onTap: () {
           Navigator.pushNamed(context, '/guests_list'); // Navigate to GuestsListView
@@ -166,7 +166,7 @@ List<Widget> getDrawerItems(UserGroup userGroup, BuildContext context) {
 
   /////////////////// Admin-specific menu items /////////////////////////////////////////////
 
-    ////////////////// Common menu items Bottom /////////////////////////////////////////////
+  ////////////////// Common menu items Bottom /////////////////////////////////////////////
 
 
   drawerItems.add(

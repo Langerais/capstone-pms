@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'authentication.dart';
 import 'config.dart';
@@ -22,8 +21,29 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  FocusNode _focusNode = FocusNode();
+  FocusNode _emailFocusNode = FocusNode();
+  FocusNode _passwordFocusNode = FocusNode();
 
   String _errorMessage = ''; // Used to display error messages from the server (e.g. invalid credentials)
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordFocusNode.addListener(() {
+      if (_passwordFocusNode.hasFocus) {
+        RawKeyboard.instance.addListener(_handleKeyPress);
+      } else {
+        RawKeyboard.instance.removeListener(_handleKeyPress);
+      }
+    });
+  }
+
+  void _handleKeyPress(RawKeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      _login();
+    }
+  }
 
   Future<void> _login() async {
     var url = Uri.parse('${AppConfig.BASE_URL}/auth/login');
@@ -39,61 +59,102 @@ class _LoginViewState extends State<LoginView> {
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       await CrossPlatformTokenStorage.storeToken(data['access_token']);
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(data['access_token']);
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(
+          data['access_token']);
       String department = decodedToken['department'] ?? 'None';
-      if(department == "Suspended"){
+      if (department == "Suspended") {
         _errorMessage = 'Your account is suspended. Please contact support.';
-        setState(() {});
-      } else{
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyApp()),
-        );
+        if (mounted) {
+          setState(() {});
+        }
+      } else {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyApp()),
+          );
+        }
       }
-
     } else {
       var responseData = json.decode(response.body);
       _errorMessage = responseData['msg'];
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image.asset('lib/icon-PMS.png', height: 200, width: 200),
+                SizedBox(height: 16.0),
+                Container(
+                  constraints: BoxConstraints(maxWidth: 300),
+                  child: Text(
+                    'Login',
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .headline5,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: 300),
+                    child: TextField(
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      onEditingComplete: () =>
+                          _passwordFocusNode
+                              .requestFocus(), // Switch focus to next field
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: 300),
+                    child: TextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      decoration: const InputDecoration(labelText: 'Password'),
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: _login,
+                  child: const Text('Login'),
+                ),
+                if (widget.expiredSessionMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(widget.expiredSessionMessage!,
+                        style: TextStyle(color: Colors.red)),
+                  ),
+                if (_errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_errorMessage,
+                        style: const TextStyle(color: Colors.red)),
+                  ),
+              ],
             ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _login,
-              child: const Text('Login'),
-            ),
-            // Display the session expired message if it's passed
-            if (widget.expiredSessionMessage != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(widget.expiredSessionMessage!, style: TextStyle(color: Colors.red)),
-              ),
-            // Display login error messages
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(_errorMessage, style: const TextStyle(color: Colors.red)),
-              ),
-          ],
+          ),
         ),
       ),
     );

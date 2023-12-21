@@ -3,7 +3,6 @@ import 'authentication.dart';
 import 'db_helper.dart';
 import 'models.dart';
 import 'drawer_menu.dart';
-import 'main.dart';
 
 class MenuView extends StatefulWidget {
 

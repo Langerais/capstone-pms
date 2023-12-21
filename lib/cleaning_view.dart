@@ -1,4 +1,4 @@
-import 'package:capstone_pms/authentication.dart';
+import 'package:MyLittlePms/authentication.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
@@ -150,9 +150,11 @@ class _CleaningScheduleViewState extends State<CleaningView> {
       DateTime today = DateTime(now.year, now.month, now.day);
       DateTime dateOnlySelected = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
 
-      if (dateOnlySelected.isBefore(today)) {
-        print("ERROR: Date is in the past");
-        return;
+      if(!kDebugMode) {
+        if (dateOnlySelected.isBefore(today)) {
+          print("ERROR: Date is in the past");
+          return;
+        }
       }
       await CleaningService.scheduleCleaning(selectedDate);
     } catch (e) {

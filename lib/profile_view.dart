@@ -26,13 +26,12 @@
 ///   the user through the profile update process.
 library;
 
-
-import 'dart:async';
-import 'package:capstone_pms/authentication.dart';
+import 'package:MyLittlePms/authentication.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'drawer_menu.dart';
+import 'login_view.dart';
 import 'models.dart';
 import 'db_helper.dart';
 
@@ -154,6 +153,15 @@ class _UserProfileViewState extends State<UserProfileView> {
               if (isChangingPassword || isEditingEmail || isEditingPhone)
                 _buildCurrentPasswordField(),
               if (isChangingPassword) _buildPasswordFields(),
+              const SizedBox(height: 20),
+              if (_isFormModified)
+                Text(
+                  'Attention: On Saving, you will be logged out and will need to log in again.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               const SizedBox(height: 20),
               _buildSaveCancelButtons(),
             ],
@@ -322,7 +330,7 @@ class _UserProfileViewState extends State<UserProfileView> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         if (!isChangingPassword)
-          TextButton(
+          ElevatedButton(
             onPressed: () => setState(() => isChangingPassword = true),
             child: const Text('Change Password'),
           ),
@@ -365,6 +373,8 @@ class _UserProfileViewState extends State<UserProfileView> {
         String updatedPhone = isEditingPhone ? newPhoneController.text : currentUser!.phone;
 
 
+
+
         // Check if the email or phone is modified and update user details
         if (isEditingEmail || isEditingPhone) {
           await UsersService.modifyUser(
@@ -398,9 +408,22 @@ class _UserProfileViewState extends State<UserProfileView> {
         });
 
 
-        // Display a success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
+        // Delay the logout to allow the user to see the success message
+        await Future.delayed(const Duration(milliseconds: 2), () {
+          // Display a success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully; Logging Out...'),
+              duration: Duration(milliseconds: 1500),
+            ),
+          );
+        });
+
+        // Clear the token and navigate to LoginView
+        await CrossPlatformTokenStorage.clearToken();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => LoginView()),
+              (Route<dynamic> route) => false, // Remove all routes below the LoginView
         );
 
       } catch (e) {

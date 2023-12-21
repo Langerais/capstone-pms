@@ -42,7 +42,7 @@ class _UserManagementViewState extends State<UserManagementView> {
       }
 
       setState(() {
-        _users = users.where((user) => user.id != _currentUser?.id).toList();
+        _users = users.where((user) => user.id != _currentUser?.id && user.id != 0).toList();
         _users.sort((a, b) => a.department.compareTo(b.department));
         _selectedUser = _users.isNotEmpty ? _users.first : null;
         _updateControllers();
@@ -74,6 +74,14 @@ class _UserManagementViewState extends State<UserManagementView> {
   void _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if(_selectedUser == null) return;
+
+    if(_selectedUser?.id == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot edit this user')),
+      );
+      return;
+    }
 
     // Check if the user is trying to change the admin user and is not an admin
     if(_selectedUser?.department == 'Admin' && _currentUser?.department != 'Admin'){

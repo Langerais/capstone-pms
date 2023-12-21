@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
-
 import 'authentication.dart';
 import 'models.dart';
 import 'package:http/http.dart' as http;

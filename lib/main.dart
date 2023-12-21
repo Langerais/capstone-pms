@@ -6,18 +6,11 @@ Fall Semester 2023
 */
 
 import 'dart:async';
-import 'package:capstone_pms/billing_view.dart';
-import 'package:capstone_pms/profile_view.dart';
-import 'package:capstone_pms/user_management_view.dart';
+import 'package:MyLittlePms/billing_view.dart';
+import 'package:MyLittlePms/profile_view.dart';
+import 'package:MyLittlePms/user_management_view.dart';
 import 'package:flutter/material.dart';
-import 'package:capstone_pms/authentication.dart';
-
-import 'dart:async';
-import 'package:capstone_pms/billing_view.dart';
-import 'package:capstone_pms/profile_view.dart';
-import 'package:capstone_pms/user_management_view.dart';
-import 'package:flutter/material.dart';
-import 'package:capstone_pms/authentication.dart';
+import 'package:MyLittlePms/authentication.dart';
 import 'cleaning_view.dart';
 import 'drawer_menu.dart';
 import 'arrivals_departures_view.dart';
@@ -92,7 +85,7 @@ class _MyAppState extends State<MyApp> {
             _initialScreen = MenuView();
             break;
           default:
-            _initialScreen = const NotificationsView(); // Default home page
+            _initialScreen = UserProfileView(); // Default home page
         }
       });
     } else {
