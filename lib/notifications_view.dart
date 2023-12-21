@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'authentication.dart';
@@ -15,6 +17,7 @@ class NotificationsView extends StatefulWidget {
 }
 
 class _NotificationsViewState extends State<NotificationsView> {
+  Timer? refreshTimer;
   List<AppNotification> notifications = [];
   String selectedNotificationTitle = 'AllNotifications';
   List<String> notificationTitles = ['AllNotifications'];
@@ -33,9 +36,29 @@ class _NotificationsViewState extends State<NotificationsView> {
   @override
   void initState() {
     super.initState();
-    print('NotificationsView initState');
     _fetchNotifications();
     _fetchDepartments();
+    startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    cancelRefreshTimer();
+    super.dispose();
+  }
+
+  // Refresh the data every minute
+  void startRefreshTimer() {
+    cancelRefreshTimer();
+    if (refreshTimer == null || !refreshTimer!.isActive) {
+      const refreshInterval = Duration(seconds: 60); // Set your desired interval
+      refreshTimer = Timer.periodic(refreshInterval, (Timer t) => _fetchNotifications());
+    }
+  }
+
+  void cancelRefreshTimer() {
+    refreshTimer?.cancel();
+    refreshTimer = null;
   }
 
   _fetchDepartments() async {
@@ -100,8 +123,6 @@ class _NotificationsViewState extends State<NotificationsView> {
 
         title: Row(
           children: [
-            const Text('Notifications'),
-            const SizedBox(width: 20),
             DropdownButton<String>(
               value: selectedNotificationTitle,
               onChanged: (String? newValue) {
@@ -177,7 +198,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            subtitle: Text("${notification.message} - Expires: ${DateFormat('yyyy-MM-dd HH:mm').format(notification.expiryDate)}")
+            subtitle: Text("${notification.message}")
           );
         },
       ),

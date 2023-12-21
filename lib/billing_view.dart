@@ -242,7 +242,11 @@ class BillingDetailsDialog extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasData && (snapshot.data == UserGroup.Admin || snapshot.data == UserGroup.Manager)) {
+            } else if (snapshot.hasData &&
+                (snapshot.data == UserGroup.Admin ||
+                    snapshot.data == UserGroup.Manager
+                )
+            ) {
               return _buildAdminView(context, true);
             } else {
               return _buildAdminView(context, false);
@@ -271,11 +275,10 @@ class BillingDetailsDialog extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Close'),
             ),
-            if (isAdmin)
-              ElevatedButton(
-                onPressed: () => _showAddPaymentDialog(context, reservationId),
-                child: const Text('Add Payment'),
-              ),
+            ElevatedButton(
+              onPressed: () => _showAddPaymentDialog(context, reservationId),
+              child: const Text('Add Payment'),
+            ),
           ],
         ),
       ],
