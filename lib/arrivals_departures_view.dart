@@ -312,7 +312,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
   // Build a cell for a reservation
   Widget buildReservationCell(int roomId, DateTime date) {
     return FutureBuilder<String>(
-      future: getLeavingGuest(roomId, date),
+      future: getGuestsNamesForRoomAndDate(roomId, date),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -398,6 +398,7 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     return daysOfWeek[date.weekday - 1];
   }
 
+  // Utility function to get the cell color for a room on a specific date depending on the reservation status
   Color? getCellColor(int roomId, DateTime date) {
     List<Reservation> todayReservations = reservations
         .where((res) => res.roomId == roomId && res.startDate.isBefore(date) && res.endDate.isAfter(date.subtract(Duration(days: 1))))
@@ -406,11 +407,11 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     if (todayReservations.isNotEmpty) {
       // Check for changes in reservations (check-in, check-out, stay, or change of guest)
       if (todayReservations.length > 1) {
-        return Colors.blueAccent; // Guest is changing today, use green
+        return Colors.blueAccent; // Guest is changing today, use blue
       } else if (isSameDate(todayReservations[0].startDate, date)) {
-        return Colors.lightBlueAccent; // Guest is arriving today, use light green
+        return Colors.lightBlueAccent; // Guest is arriving today, use lighter blue
       } else {
-        return Colors.lightBlue[200]; // Guest is in room, use the calculated color
+        return Colors.lightBlue[200]; // Guest is in room, use the lightest blue
       }
     }
 
@@ -437,51 +438,26 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
     super.dispose();
   }
 
-
-
-  Future<String> getGuestFullName(int guestId) async {  //TODO: Remove this function ???
-    Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
-    return guest != null ? '${guest.name} ${guest.surname}' : 'Unknown';
-  }
-
   Future<String> getGuestSurname(int guestId) async {
     Guest? guest = guests.firstWhereOrNull((g) => g.id == guestId);
     return guest != null ? guest.surname : 'Unknown';
   }
 
-  Future<String?> getReservationInfo(int roomId, DateTime date) async {
-    List<Reservation> roomReservations = reservations
-        .where((res) => res.roomId == roomId && date.isAfter(res.startDate) && date.isBefore(res.endDate.add(Duration(days: 1))))
-        .toList();
 
-
-    if (roomReservations.isNotEmpty) {
-      Reservation reservation = roomReservations[0];
-      String arrivingGuest = await getGuestSurname(reservation.guestId);
-
-      if (reservation.startDate == date) {
-        // Guest is arriving today
-        String leavingGuest = await getLeavingGuest(roomId, date);
-        return leavingGuest.isNotEmpty ? '$leavingGuest / $arrivingGuest' : arrivingGuest;
-      } else {
-        // Guest is staying or leaving today
-        String leavingGuest = await getLeavingGuest(roomId, date);
-        return leavingGuest.isNotEmpty ? leavingGuest : arrivingGuest;
-      }
-    } else {
-      return 'FREE'; // Room available
-    }
-  }
-
-
-  Future<String> getLeavingGuest(int roomId, DateTime date) async {
-    List<Reservation> todaysReservations =  await ReservationService.getReservationsByRoomAndDateRange(date, date, roomId);
+  // Utility function to get the guest name for a room on a specific date;
+  // If there is a guest leaving on that date, return their surname
+  // If there is a guest arriving on that date, return their surname
+  // If there is a guest staying on that date, return their surname
+  // If there is no guest on that date, return an empty string
+  // If there are multiple guests on that date, return Guest1 / Guest2
+  Future<String> getGuestsNamesForRoomAndDate(int roomId, DateTime date) async {
+    List<Reservation> todayReservations =  await ReservationService.getReservationsByRoomAndDateRange(date, date, roomId);
 
 
     String leavingGuest = '';
     String arrivingGuest = '';
 
-    for (var reservation in todaysReservations) {
+    for (var reservation in todayReservations) {
       if (isSameDate(reservation.endDate, date)) {
         leavingGuest = await getGuestSurname(reservation.guestId);
       }
@@ -497,8 +473,8 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       return leavingGuest;
     } else if (arrivingGuest.isNotEmpty) {
       return arrivingGuest;
-    } else if (todaysReservations.isNotEmpty) {
-      return getGuestSurname(todaysReservations[0].guestId); // No leaving or arriving guest
+    } else if (todayReservations.isNotEmpty) {
+      return getGuestSurname(todayReservations[0].guestId); // No leaving or arriving guest
     } else {
       return ''; // Room available
     }
@@ -647,19 +623,6 @@ class _ArrivalsDeparturesTableState extends State<ArrivalsDeparturesTable> {
       },
     );
   }
-
-// Utility function to format DateTime
-  String formatDateTime(DateTime dateTime) {
-    // Format the dateTime as needed
-    return DateFormat('yyyy-MM-dd – kk:mm').format(dateTime);
-  }
-
-  // Utility function to parse and format DateTime from String
-  String formatDateTimeFromString(String dateTimeString) {
-    DateTime dateTime = DateTime.parse(dateTimeString);
-    return DateFormat('yyyy-MM-dd – kk:mm').format(dateTime);
-  }
-
 
   void confirmAndDeleteReservation(BuildContext context, int reservationId) {
     showDialog(

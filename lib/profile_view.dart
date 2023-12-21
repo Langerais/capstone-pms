@@ -124,25 +124,20 @@ class _UserProfileViewState extends State<UserProfileView> {
           key: _formKey,
           child: Column(
             children: [
-              Row(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'User: ${currentUser?.name ?? 'Loading...'} ${currentUser?.surname ?? ''}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                      ),
+                  Text(
+                    'User: ${currentUser?.name ?? 'Loading...'} ${currentUser?.surname ?? ''}',
+                    style: const TextStyle(
+                      fontSize: 18,
                     ),
                   ),
-                  const SizedBox(width: 16.0),
-                  Expanded(
-                    child: Text(
-                      'Role: ${currentUser?.department ?? 'Loading...'}',
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(
-                        fontSize: 18,
-                      ),
+                  const SizedBox(height: 16.0),
+                  Text(
+                    'Role: ${currentUser?.department ?? 'Loading...'}',
+                    style: const TextStyle(
+                      fontSize: 18,
                     ),
                   ),
                 ],
@@ -163,6 +158,12 @@ class _UserProfileViewState extends State<UserProfileView> {
                   ),
                 ),
               const SizedBox(height: 20),
+              if (!isChangingPassword)
+                ElevatedButton(
+                  onPressed: () => setState(() => isChangingPassword = true),
+                  child: const Text('Change Password'),
+                ),
+              const SizedBox(height: 20),
               _buildSaveCancelButtons(),
             ],
           ),
@@ -176,36 +177,42 @@ class _UserProfileViewState extends State<UserProfileView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        TextFormField(
-          controller: isEditingEmail ? newEmailController : emailController,
-          decoration: InputDecoration(
-            labelText: isEditingEmail ? 'New Email' : 'Email',
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter an email';
-            }
-            if (!value.contains('@')) {
-              return 'Please enter a valid email';
-            }
-            return null;
-          },
-          onChanged: (value) {
-            _onFieldChanged();
-          },
-          enabled: isEditingEmail,
-        ),
-        if (isEditingEmail)
-          TextFormField(
-            controller: confirmEmailController,
-            decoration: const InputDecoration(labelText: 'Confirm Email'),
+        Container(
+            constraints: BoxConstraints(maxWidth: 300),
+            child: TextFormField(
+            controller: isEditingEmail ? newEmailController : emailController,
+            decoration: InputDecoration(
+              labelText: isEditingEmail ? 'New Email' : 'Email',
+            ),
             validator: (value) {
-              if (value != newEmailController.text) {
-                return 'Emails do not match';
+              if (value == null || value.isEmpty) {
+                return 'Please enter an email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email';
               }
               return null;
             },
+            onChanged: (value) {
+              _onFieldChanged();
+            },
+            enabled: isEditingEmail,
           ),
+        ),
+        if (isEditingEmail)
+          Container(
+            constraints: BoxConstraints(maxWidth: 300),
+            child: TextFormField(
+              controller: confirmEmailController,
+              decoration: const InputDecoration(labelText: 'Confirm Email'),
+              validator: (value) {
+                if (value != newEmailController.text) {
+                  return 'Emails do not match';
+                }
+                return null;
+            },
+          ),
+        ),
         if (!isEditingEmail)
           TextButton(
             onPressed: () => setState(() {
@@ -226,43 +233,50 @@ class _UserProfileViewState extends State<UserProfileView> {
     final phoneRegex = RegExp(r'^\+?1?\d{9,15}$');
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: isEditingPhone ? newPhoneController : phoneController,
-          decoration: InputDecoration(
-            labelText: isEditingPhone ? 'New Phone' : 'Phone',
-          ),
-          keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a phone number';
-            } else if (!phoneRegex.hasMatch(value)) {
-              return 'Please enter a valid phone number';
-            }
-            return null;
-          },
-          onChanged: (value) {
-            _onFieldChanged();
-          },
-          enabled: isEditingPhone,
+        Container(
+            constraints: BoxConstraints(maxWidth: 300),
+            child: TextFormField(
+              controller: isEditingPhone ? newPhoneController : phoneController,
+              decoration: InputDecoration(
+                labelText: isEditingPhone ? 'New Phone' : 'Phone',
+              ),
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a phone number';
+                } else if (!phoneRegex.hasMatch(value)) {
+                  return 'Please enter a valid phone number';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                _onFieldChanged();
+              },
+              enabled: isEditingPhone,
+            ),
         ),
         if (isEditingPhone)
-          TextFormField(
-            controller: confirmPhoneController,
-            decoration: InputDecoration(labelText: 'Confirm Phone'),
-            keyboardType: TextInputType.phone,
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
-            validator: (value) {
-              if (value != newPhoneController.text) {
-                return 'Phone numbers do not match';
-              } else if (!phoneRegex.hasMatch(value!)) {
-                return 'Please enter a valid phone number';
-              }
-              return null;
-            },
-          ),
+          Container(
+            constraints: BoxConstraints(maxWidth: 300),
+            child:
+            TextFormField(
+              controller: confirmPhoneController,
+              decoration: InputDecoration(labelText: 'Confirm Phone'),
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
+              validator: (value) {
+                if (value != newPhoneController.text) {
+                  return 'Phone numbers do not match';
+                } else if (!phoneRegex.hasMatch(value!)) {
+                  return 'Please enter a valid phone number';
+                }
+                return null;
+              },
+            ),
+        ),
         if (!isEditingPhone)
           TextButton(
             onPressed: () => setState(() {
@@ -279,27 +293,35 @@ class _UserProfileViewState extends State<UserProfileView> {
   // Builds the password fields for changing password
   Widget _buildPasswordFields() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: newPasswordController,
-          decoration: const InputDecoration(labelText: 'New Password'),
-          obscureText: true,
-          validator: (value) => _validatePassword(value),
-          onChanged: (value) {
-            _onFieldChanged();
-          },
-        ),
-
-        TextFormField(
-          controller: confirmNewPasswordController,
-          decoration: const InputDecoration(labelText: 'Confirm New Password'),
-          obscureText: true,
-          validator: (value) {
-            if (value != newPasswordController.text) {
-              return 'Passwords do not match';
-            }
-            return null;
-          },
+      Container(
+        constraints: BoxConstraints(maxWidth: 300),
+        child:
+          TextFormField(
+            controller: newPasswordController,
+            decoration: const InputDecoration(labelText: 'New Password'),
+            obscureText: true,
+            validator: (value) => _validatePassword(value),
+            onChanged: (value) {
+              _onFieldChanged();
+            },
+          ),
+      ),
+      Container(
+        constraints: BoxConstraints(maxWidth: 300),
+        child:
+          TextFormField(
+            controller: confirmNewPasswordController,
+            decoration: const InputDecoration(labelText: 'Confirm New Password'),
+            obscureText: true,
+            validator: (value) {
+              if (value != newPasswordController.text) {
+                return 'Passwords do not match';
+              }
+              return null;
+            },
+          ),
         ),
       ],
     );
@@ -307,37 +329,37 @@ class _UserProfileViewState extends State<UserProfileView> {
 
   // Builds the field for entering the current password
   Widget _buildCurrentPasswordField() {
-    return TextFormField(
-      controller: currentPasswordController,
-      decoration: InputDecoration(
-        labelText: 'Current Password',
-        errorText: _isCurrentPasswordValid == false ? 'Incorrect password' : null,
+    return Container(
+      constraints: BoxConstraints(maxWidth: 300),
+      child:
+        TextFormField(
+        controller: currentPasswordController,
+        decoration: InputDecoration(
+          labelText: 'Current Password',
+          errorText: _isCurrentPasswordValid == false ? 'Incorrect password' : null,
+        ),
+        obscureText: true,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your current password';
+          }
+          // Add additional validation if necessary
+          return null;
+        },
       ),
-      obscureText: true,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your current password';
-        }
-        // Add additional validation if necessary
-        return null;
-      },
     );
   }
 
   // Builds save and cancel buttons
   Widget _buildSaveCancelButtons() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (!isChangingPassword)
-          ElevatedButton(
-            onPressed: () => setState(() => isChangingPassword = true),
-            child: const Text('Change Password'),
-          ),
         ElevatedButton(
           onPressed: _cancelEdit,
           child: const Text('Clear'),
         ),
+        const SizedBox(width: 20),
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
