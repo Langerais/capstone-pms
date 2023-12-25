@@ -52,7 +52,7 @@ class _UserProfileViewState extends State<UserProfileView> {
   final TextEditingController currentPasswordController = TextEditingController();
 
   // Key to identify the form and its state
-  final _formKey = GlobalKey<FormState>();
+  final _formKeyProfile = GlobalKey<FormState>();
 
   User? currentUser; // Holds the current user's data
   bool isEditingEmail = false; // Flag to indicate if the email is being edited
@@ -121,7 +121,7 @@ class _UserProfileViewState extends State<UserProfileView> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: _formKeyProfile,
           child: Column(
             children: [
               Column(
@@ -362,7 +362,7 @@ class _UserProfileViewState extends State<UserProfileView> {
         const SizedBox(width: 20),
         ElevatedButton(
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            if (_formKeyProfile.currentState!.validate()) {
               _isFormModified ? _saveProfile() : null;
             }
           },
@@ -485,7 +485,7 @@ class _UserProfileViewState extends State<UserProfileView> {
         phoneController.text = user.phone;
         confirmEmailController.clear();
         confirmPhoneController.clear();
-        _formKey.currentState!.reset();
+        _formKeyProfile.currentState!.reset();
         _isFormModified = false;
       });
     });

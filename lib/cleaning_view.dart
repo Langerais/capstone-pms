@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'drawer_menu.dart';
 
-// TODO: Individual refresh for each task
+// TODO: Confirmation of task edit saves
 
 /// A StatefulWidget for displaying and managing cleaning schedules.
 class CleaningView extends StatefulWidget {

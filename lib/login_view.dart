@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:MyLittlePms/token_expiration_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -19,6 +22,7 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  //Timer? _tokenExpirationCheckTimer;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   FocusNode _focusNode = FocusNode();
@@ -37,6 +41,25 @@ class _LoginViewState extends State<LoginView> {
         RawKeyboard.instance.removeListener(_handleKeyPress);
       }
     });
+
+    TokenExpirationManager.stopRefreshTimer();  // Stop the timer from main.dart when the user is on the login screen
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the TextEditingController instances
+    _emailController.dispose();
+    _passwordController.dispose();
+
+    // Dispose of the FocusNode instances
+    _focusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+
+    // Remove the listener from the RawKeyboard instance
+    RawKeyboard.instance.removeListener(_handleKeyPress);
+
+    super.dispose();
   }
 
   void _handleKeyPress(RawKeyEvent event) {
@@ -57,6 +80,7 @@ class _LoginViewState extends State<LoginView> {
     );
 
     if (response.statusCode == 200) {
+      //await CrossPlatformTokenStorage.clearToken();
       var data = json.decode(response.body);
       await CrossPlatformTokenStorage.storeToken(data['access_token']);
       Map<String, dynamic> decodedToken = JwtDecoder.decode(
@@ -69,6 +93,9 @@ class _LoginViewState extends State<LoginView> {
         }
       } else {
         if (mounted) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) {  // Restart the timer from main.dart when the user is logged in
+            TokenExpirationManager.startRefreshTimer(context);
+          });
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => MyApp()),

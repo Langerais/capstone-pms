@@ -6,28 +6,31 @@ Fall Semester 2023
 */
 
 import 'dart:async';
-import 'package:MyLittlePms/billing_view.dart';
-import 'package:MyLittlePms/profile_view.dart';
-import 'package:MyLittlePms/user_management_view.dart';
+import 'package:MyLittlePms/token_expiration_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:MyLittlePms/authentication.dart';
-import 'cleaning_view.dart';
-import 'drawer_menu.dart';
+import 'package:MyLittlePms/authentication.dart'; // Import your Auth class from another file
+import 'package:timezone/data/latest.dart' as tz;
+
 import 'arrivals_departures_view.dart';
+import 'billing_view.dart';
+import 'cleaning_view.dart';
+import 'config.dart';
+import 'drawer_menu.dart';
 import 'guests_list.dart';
 import 'log_view.dart';
 import 'login_view.dart';
 import 'menu_view.dart';
 import 'notifications_view.dart';
-import 'package:timezone/data/latest.dart' as tz;
-
-
+import 'profile_view.dart';
+import 'user_management_view.dart';
 
 void main() {
   tz.initializeTimeZones();
   runApp(const MyApp());
 }
 
+// Define a global key for your app's navigation
+//final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -37,33 +40,40 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late BuildContext mainContext;
   Widget? _initialScreen;
   Timer? _tokenExpirationCheckTimer;
+  final tokenExpirationManager = TokenExpirationManager();
 
   @override
   void initState() {
     super.initState();
     _determineInitialScreen();
-    startRefreshTimer();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      TokenExpirationManager.startRefreshTimer(mainContext);
+    });
   }
 
   @override
   void dispose() {
-    cancelRefreshTimer();
+    TokenExpirationManager.stopRefreshTimer();
     super.dispose();
   }
 
-  void startRefreshTimer() {
-    cancelRefreshTimer();
-    if (_tokenExpirationCheckTimer == null || !_tokenExpirationCheckTimer!.isActive) {
-      const refreshInterval = Duration(seconds: 60); // Interval after which to check token expiration
-      _tokenExpirationCheckTimer = Timer.periodic(refreshInterval, (Timer t) => Auth.checkTokenExpiration(context));
-    }
-  }
+  Future<void> startRefreshTimer(BuildContext context) async {
+    const refreshInterval = Duration(seconds: AppConfig.TOKEN_CHECK_TIMER);
+    _tokenExpirationCheckTimer?.cancel(); // Cancel any existing timer
 
-  void cancelRefreshTimer() {
-    _tokenExpirationCheckTimer?.cancel();
-    _tokenExpirationCheckTimer = null;
+    // Set up the periodic timer
+    _tokenExpirationCheckTimer = Timer.periodic(refreshInterval, (Timer t) async {
+      print('Checking token expiration...');
+      bool tokenValid = await Auth.checkTokenExpiration();
+      if (!tokenValid) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginView(expiredSessionMessage: "Session Expired")),
+        );
+      }
+    });
   }
 
   void _determineInitialScreen() async {
@@ -96,12 +106,12 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
+    mainContext = context;
     return MaterialApp(
       title: 'Hotel PMS',
+      //navigatorKey: navigatorKey,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -121,7 +131,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
 
@@ -132,25 +141,22 @@ class MyHomePage extends StatelessWidget {
         title: const Text('Hotel PMS'),
       ),
       drawer: FutureBuilder<UserGroup>(
-        future: Auth.getUserRole(),  // Get the current user's role
+        future: Auth.getUserRole(),
         builder: (BuildContext context, AsyncSnapshot<UserGroup> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // While waiting, show a progress indicator
             return const Drawer(
               child: Center(child: CircularProgressIndicator()),
             );
           } else if (snapshot.hasError) {
-            // If there's an error, show an error message
             return Drawer(
               child: Center(child: Text('Error: ${snapshot.error}')),
             );
           } else {
-            // Once data is available, build the drawer
             return Drawer(
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: <Widget>[
-                  ...getDrawerItems(snapshot.data!, context), // Generate items for User
+                  ...getDrawerItems(snapshot.data!, context),
                 ],
               ),
             );

@@ -16,7 +16,7 @@ class _UserManagementViewState extends State<UserManagementView> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmNewPasswordController = TextEditingController();
   final TextEditingController _managerPasswordController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKeyUsers = GlobalKey<FormState>();
 
   List<User> _users = [];
   User? _selectedUser;
@@ -72,7 +72,7 @@ class _UserManagementViewState extends State<UserManagementView> {
   }
 
   void _saveChanges() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKeyUsers.currentState!.validate()) return;
 
     if(_selectedUser == null) return;
 
@@ -228,7 +228,7 @@ class _UserManagementViewState extends State<UserManagementView> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: _formKeyUsers,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -412,7 +412,7 @@ class NewUserView extends StatefulWidget {
 }
 
 class _NewUserViewState extends State<NewUserView> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKeyNewUser = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -428,7 +428,7 @@ class _NewUserViewState extends State<NewUserView> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: _formKeyNewUser,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -558,7 +558,7 @@ class _NewUserViewState extends State<NewUserView> {
   }
 
   void _createUser() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKeyNewUser.currentState!.validate()) {
       final result = await UsersService.registerUser(
         name: _nameController.text,
         surname: _surnameController.text,

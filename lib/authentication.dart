@@ -89,17 +89,14 @@ class Auth {
   }
 
   // Function to check if the JWT token has expired
-  static Future<void> checkTokenExpiration(BuildContext context) async {
+  static Future<bool> checkTokenExpiration() async {
     String? token = await CrossPlatformTokenStorage.getToken();
-
+    print('Checking token expiration...');
     if (token != null && JwtDecoder.isExpired(token)) {
-      // Token has expired, clear it and navigate to LoginView with a message
       await CrossPlatformTokenStorage.clearToken();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginView(expiredSessionMessage: "Session Expired")),
-      );
+      return false;  // Token has expired
     }
+    return true;  // Token is still valid
   }
 
 }
